@@ -7,22 +7,25 @@ package mygame;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.Client;
+import com.jme3.network.ClientStateListener;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
 import com.jme3.network.Network;
+import com.jme3.network.serializing.Serializer;
 import com.jme3.renderer.RenderManager;
+import com.jme3.system.JmeContext;
 import java.io.IOException;
 
 /**
  *
  * @author ThomasLeScolan
  */
-public class ClientMain extends SimpleApplication {
+public class ClientMain extends SimpleApplication implements ClientStateListener{
     private Client myClient;
     
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
-        app.start();
+        app.start(JmeContext.Type.Display);
     }
 
     @Override
@@ -32,7 +35,11 @@ public class ClientMain extends SimpleApplication {
             myClient = Network.connectToServer(Globals.NAME, Globals.VERSION, Globals.DEFAULT_SERVER, Globals.DEFAULT_PORT);
             myClient.start();
         } catch (IOException ex) { }
+        
+        // add client listener :
+        myClient.addClientStateListener(this);
     }
+        
     
     // to ensure to close the net connection cleanly :
     @Override
@@ -51,6 +58,17 @@ public class ClientMain extends SimpleApplication {
     @Override
     public void simpleRender(RenderManager rm) {
         //TODO: add render code
+    }
+
+    @Override
+    public void clientConnected(Client client) {
+        System.out.println("Client #" + client.getId() + " is ready."); 
+    }
+
+    @Override
+    public void clientDisconnected(Client client, DisconnectInfo info) {
+        System.out.println("Client #" + client.getId() + " has left.");
+
     }
     
     public class ClientListener implements MessageListener<Client> {
