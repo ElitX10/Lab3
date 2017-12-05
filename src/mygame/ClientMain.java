@@ -31,12 +31,12 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     private Globals myGlobals = new Globals();
     private final Node NODE_GAME = new Node("NODE_GAME");
 //    private Ask ask = new Ask();
-//    private Game game = new Game(this,NODE_GAME);
+    private Game game = new Game(this,NODE_GAME);
     
     public ClientMain(){
 //        ask.setEnabled(true);
-//        game.setEnabled(true);
-//        stateManager.attach(game);
+        game.setEnabled(true);
+        stateManager.attach(game);
 //        stateManager.attach(ask);        
     }
     

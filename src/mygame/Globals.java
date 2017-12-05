@@ -11,12 +11,15 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Cylinder;
+import com.jme3.scene.shape.Sphere;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -30,32 +33,15 @@ public class Globals {
     public static final String DEFAULT_SERVER = "localhost";
     public static final int VERSION = 1;
     public static final int DEFAULT_PORT = 6143;
-    
-    // thickness of the sides of the frame
-    static final float FRAME_THICKNESS = 24f; 
-    // width (and height) of the free area inside the frame, where disks move
-    static final float FREE_AREA_WIDTH = 492f; 
-    // total outer width (and height) of the frame
-    static final float FRAME_SIZE = FREE_AREA_WIDTH + 2f * FRAME_THICKNESS; 
-
-    // next three constants define initial positions for disks
-    static final float PLAYER_COORD = FREE_AREA_WIDTH / 6;
-    static final float POSNEG_MAX_COORD = FREE_AREA_WIDTH / 3;
-    static final float POSNEG_BETWEEN_COORD = PLAYER_COORD;
-    
-    // radius :
-    static final float PLAYER_R = 20f; // radius of a player's disk
-    static final float POSDISK_R = 16f; // radius of a positive disk
-    static final float NEGDISK_R = 16f; // radius of a negative disk  
-    
-    // posible position for disk + / - :
-    private final float POS_TAB[] = {-POSNEG_MAX_COORD, -POSNEG_BETWEEN_COORD, 0, POSNEG_BETWEEN_COORD, POSNEG_MAX_COORD};
+        
     
     // abstract message :
     public static abstract class MyAbstractMessage extends AbstractMessage{
     
     }   
 }
+
+//-------------------------------------------------GAME--------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Game extends BaseAppState {
     // player number
@@ -96,7 +82,7 @@ class Game extends BaseAppState {
 //                                        {new KeyTrigger(KeyInput.KEY_T), new KeyTrigger(KeyInput.KEY_G), new KeyTrigger(KeyInput.KEY_H), new KeyTrigger(KeyInput.KEY_F)}};
     
     // list containing all the disks :
-//    private ArrayList<Disk> diskStore = new ArrayList<Disk>();
+    private ArrayList<Disk> diskStore = new ArrayList<Disk>();
     
     private final Application myApp;
     private final Node NODE_GAME;
@@ -150,26 +136,26 @@ class Game extends BaseAppState {
         GameBoard gb = new GameBoard();
         NODE_GAME.attachChild(gb.getGameBoard());                 
         
-//        // create all neg and pos disk :
-//        boolean isNeg = true;
-//        for(int i=0; i<5 ;i++){
-//            for (int j=0; j<5 ;j++){
-//                if(!((i>0 && i<4)&&(j>0 && j<4))){
-//                    if (isNeg){
-//                        NDisk disk = new NDisk(POS_TAB[i], POS_TAB[j]);
-//                        disk.setEnabled(true); 
-//                        myApp.getStateManager().attach(disk);
-//                        diskStore.add(disk);
-//                    }else{
-//                        PDisk disk = new PDisk(POS_TAB[i], POS_TAB[j]); 
-//                        disk.setEnabled(true); 
-//                        myApp.getStateManager().attach(disk);
-//                        diskStore.add(disk);
-//                    }
-//                }
-//                isNeg = !isNeg;                
-//            }     
-//        }
+        // create all neg and pos disk :
+        boolean isNeg = true;
+        for(int i=0; i<5 ;i++){
+            for (int j=0; j<5 ;j++){
+                if(!((i>0 && i<4)&&(j>0 && j<4))){
+                    if (isNeg){
+                        NDisk disk = new NDisk(POS_TAB[i], POS_TAB[j], myApp, NODE_GAME);
+                        disk.setEnabled(true); 
+                        myApp.getStateManager().attach(disk);
+                        diskStore.add(disk);
+                    }else{
+                        PDisk disk = new PDisk(POS_TAB[i], POS_TAB[j], myApp, NODE_GAME); 
+                        disk.setEnabled(true); 
+                        myApp.getStateManager().attach(disk);
+                        diskStore.add(disk);
+                    }
+                }
+                isNeg = !isNeg;                
+            }     
+        }
         
 //        // create players :
 //        for (int i = 0; i < NUMBER_OF_PLAYER ;i++){
@@ -301,5 +287,370 @@ class Game extends BaseAppState {
         public Node getGameBoard(){
             return NODE_GAME_BOARD;
         }
+    }
+}
+
+//-------------------------------------------------DISK--------------------------------------------------------------------------------------------------------------------------------------------------------
+abstract class Disk extends BaseAppState {
+    private final float RADIUS;
+    private float X_POS;
+    private float Y_POS;
+    private final float Z_POS;
+    protected float X_SPEED;
+    protected float Y_SPEED;
+    private final float SIZE;
+    private final double MASS;
+    public String TYPE;    
+    protected ColorRGBA COLOR = ColorRGBA.White;
+    protected int POINT;
+    protected Material mat_disk;
+    protected final int INIT_SPEED_VALUE = 10;
+    private final float FRICTION = 0.10f;
+    
+    // node containing the disk : 
+    protected Node node_disk;
+    
+    // app :
+    private final Application myApp;
+    
+    // game node : 
+    private final Node NODE_GAME;
+        
+    public Disk(String type, ColorRGBA color, float radius, float size, float X_pos, float Y_pos, Application app, Node gameNode){
+        myApp = app;
+        NODE_GAME = gameNode;
+        this.COLOR = color;
+        this.RADIUS = radius;
+        this.SIZE = size/2;
+        this.X_POS = X_pos;
+        this.Y_POS = Y_pos;
+        this.TYPE = type;        
+        this.Z_POS = -size/2;
+        this.MASS = Math.PI * radius * radius;
+    }
+    
+    @Override
+    protected void initialize(Application app) {
+        //create the cylinder :
+//        myApp = (Main) app;
+        Cylinder disk = new Cylinder(30, 30, RADIUS, SIZE, true);//30 sample
+        Geometry geom_disk = new Geometry("geom_disk", disk);
+        mat_disk = new Material(myApp.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        mat_disk.setColor("Color", COLOR);
+        geom_disk.setMaterial(mat_disk);
+        node_disk = new Node("node_disk");
+        node_disk.attachChild(geom_disk);           
+        node_disk.setLocalTranslation(X_POS, Y_POS, Z_POS); 
+        NODE_GAME.attachChild(node_disk); 
+    }  
+    
+    @Override
+    protected void cleanup(Application app) {
+        
+    }
+    
+    @Override
+    protected void onEnable() {
+        NODE_GAME.attachChild(node_disk);
+    }
+    
+    @Override
+    protected void onDisable() {
+        // stop disk when is disabled :
+        this.X_SPEED = 0;
+        this.Y_SPEED = 0;
+    }
+    
+    @Override
+    public void update(float tpf) {
+        // update the position :
+        this.X_POS += X_SPEED * tpf;
+        this.Y_POS += Y_SPEED * tpf;   
+         
+        // move to the new position :
+        node_disk.setLocalTranslation(X_POS, Y_POS , Z_POS);
+        
+        //simulate friction :
+            this.X_SPEED -= this.X_SPEED * FRICTION * tpf;
+            this.Y_SPEED -= this.Y_SPEED * FRICTION * tpf;  
+        
+        // check if there is a collision with the frame :    
+        frameCollision();
+    } 
+    
+    private void frameCollision(){
+        // set position and new velocity to simulate collision with the frame (when collision is detected) :
+        if(this.X_POS + this.RADIUS > Game.FREE_AREA_WIDTH/2){
+            this.X_POS = Game.FREE_AREA_WIDTH/2 - this.RADIUS;
+            this.X_SPEED = - this.X_SPEED;            
+        }
+        if(this.X_POS - this.RADIUS < - Game.FREE_AREA_WIDTH/2){
+            this.X_POS = - Game.FREE_AREA_WIDTH/2 + this.RADIUS;
+            this.X_SPEED = - this.X_SPEED; 
+        }
+        if(this.Y_POS + this.RADIUS > Game.FREE_AREA_WIDTH/2){
+            this.Y_SPEED = - this.Y_SPEED;
+            this.Y_POS = Game.FREE_AREA_WIDTH/2 - this.RADIUS;
+        }
+        if(this.Y_POS - this.RADIUS < - Game.FREE_AREA_WIDTH/2){
+            this.Y_SPEED = - this.Y_SPEED;
+            this.Y_POS = - Game.FREE_AREA_WIDTH/2 + this.RADIUS;
+        }
+    }
+    
+    public void diskCollision(Disk disk2, float tpf){
+        if(this.isEnabled()){            
+            // distance between the center of 2 disks :
+            double distance = Math.sqrt((this.X_POS - disk2.X_POS) * (this.X_POS - disk2.X_POS) + (this.Y_POS - disk2.Y_POS) * (this.Y_POS - disk2.Y_POS));
+            
+            // check if there is an overlap :
+            if (distance < this.RADIUS + disk2.RADIUS){                    
+                // I) move backwards :
+                
+                // get value from the previous position (where it was no overlap and no collision) : time t(k-1) :
+                float X1 = this.X_POS - this.X_SPEED * tpf;
+                float Y1 = this.Y_POS - this.Y_SPEED * tpf;
+                float VX1 = this.X_SPEED + this.X_SPEED * this.FRICTION * tpf; 
+                float VY1 = this.Y_SPEED + this.Y_SPEED * this.FRICTION * tpf; 
+                float X2 = disk2.X_POS - disk2.X_SPEED * tpf;
+                float Y2 = disk2.Y_POS - disk2.Y_SPEED * tpf;
+                float VX2 = disk2.X_SPEED + disk2.X_SPEED * disk2.FRICTION * tpf;
+                float VY2 = disk2.Y_SPEED + disk2.Y_SPEED * disk2.FRICTION * tpf;
+                
+                // find the exact time of the collision (we need to solve an equation to find this time):
+                // intermediate values : 
+                float DX = X1 - X2;
+                float DY = Y1 - Y2;
+                float DVX = VX1 - VX2;
+                float DVY = VY1 - VY2;
+                
+                // values to solve the equation : 
+                float a = DVX * DVX + DVY * DVY;
+                float b = 2 * (DX * DVX + DY * DVY);
+                double c = (DX * DX) + (DY * DY) - (distance * distance);
+                
+                // solutions for the equation at²+bx+c = 0 :                  
+                //double t1 = (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a); not the good solution
+                double t2 = (-b - Math.sqrt(b * b - 4 * a * c)) / (2 * a); 
+                
+                //choose the right solution : 
+                float collisionTime;
+                if(t2 > 0 && t2 < tpf){
+                    collisionTime = (float)t2;
+                }else {
+                    return;
+                }
+
+                // II) position and velocity where only 1 point of collision : time t :
+                X1 = X1 + VX1 * collisionTime;
+                Y1 = Y1 + VY1 * collisionTime;
+                VX1 = VX1 - VX1 * this.FRICTION * collisionTime;
+                VY1 = VY1 - VY1 * this.FRICTION * collisionTime;
+                X2 = X2 + VX2 * collisionTime;
+                Y2 = Y2 + VY2 * collisionTime;
+                VX2 = VX2 - VX2 * disk2.FRICTION * collisionTime;
+                VY2 = VY2 - VY2 * disk2.FRICTION * collisionTime; 
+                
+                //set the new position :
+                this.node_disk.setLocalTranslation(X1, Y1 , this.Z_POS);
+                disk2.node_disk.setLocalTranslation(X2 , Y2 , disk2.Z_POS);
+                
+                // III) compute new velocity (7 step):
+                //step 1 :
+                Vector3f un = new Vector3f(X2 - X1, Y2 - Y1, 0).normalize();
+                Vector3f ut = new Vector3f(-un.y, un.x, 0);
+                
+                //step 2 :
+                Vector3f v1 = new Vector3f(VX1, VY1, 0);
+                Vector3f v2 = new Vector3f(VX2, VY2, 0); 
+                
+                //step 3 and step 4 :
+                float v1n = un.dot(v1);
+                float vp1t = ut.dot(v1);
+                float v2n = un.dot(v2);
+                float vp2t = ut.dot(v2);
+                
+                //step 5 : 
+                double vp1n = (v1n * (this.MASS - disk2.MASS) + 2 * disk2.MASS * v2n) / (this.MASS + disk2.MASS);
+                double vp2n = (v2n * (disk2.MASS - this.MASS) + 2 * this.MASS * v1n) / (this.MASS + disk2.MASS);
+                
+                //step 6 and step 7 :                    
+                Vector3f vp1 = un.mult((float) vp1n).add(ut.mult(vp1t));
+                Vector3f vp2 = un.mult((float) vp2n).add(ut.mult(vp2t));
+
+                // IV) set position and velocity back at time t(k) :
+                // set the new position :
+                this.X_POS = X1 + vp1.x * (tpf - collisionTime);
+                this.Y_POS = Y1 + vp1.y * (tpf - collisionTime);
+                disk2.X_POS = X2 + vp2.x * (tpf - collisionTime);
+                disk2.Y_POS = Y2 + vp2.y * (tpf - collisionTime);
+
+                // set the new speed :
+                this.X_SPEED = vp1.x - vp1.x * this.FRICTION * (tpf - collisionTime);
+                this.Y_SPEED = vp1.y - vp1.y * this.FRICTION * (tpf - collisionTime);
+                disk2.X_SPEED = vp2.x - vp2.x * disk2.FRICTION * (tpf - collisionTime);
+                disk2.Y_SPEED = vp2.y - vp2.y * disk2.FRICTION * (tpf - collisionTime);
+
+                // update the score :
+                this.addToScore(disk2.reward(this));
+                disk2.addToScore(this.reward(disk2));
+            }            
+        }       
+    }
+    
+    // functions specific for each kind of disk :
+    abstract public int reward(Disk d);
+    abstract void addToScore(int points);
+    abstract public int getID();
+}
+
+//-------------------------------------------------NEGATIV  DISK --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class NDisk extends Disk {    
+    
+    NDisk(float X_pos, float Y_pos, Application app, Node gameNode){
+        super("N", ColorRGBA.Red, Game.NEGDISK_R, Game.FRAME_THICKNESS, X_pos, Y_pos, app, gameNode);
+        if (app instanceof ServerMain){
+            this.X_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;
+            this.Y_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;
+        } 
+        this.POINT = -3;
+    }
+    
+    @Override
+    protected void initialize(Application app) {
+        super.initialize(app);       
+    }
+    
+    @Override
+    protected void cleanup(Application app) {
+        
+    }
+    
+    @Override
+    protected void onEnable() {
+        super.onEnable();
+    }
+    
+    @Override
+    protected void onDisable() {
+        super.onDisable();
+    }
+    
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+    }
+
+    @Override
+    public int reward(Disk d) {
+        return this.POINT;
+    }
+
+    @Override
+    void addToScore(int points) {
+        // no need to add point to the negativ disks
+    }
+
+    @Override
+    public int getID() {
+        return 0;
+    }
+}
+
+//-------------------------------------------------POSITIV  DISK --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class PDisk extends Disk {
+    // possible color for a positiv disk : 
+    private final ColorRGBA colorTab[] = {new ColorRGBA(0,0.2f,0, 256), new ColorRGBA(0,0.3f,0,256), new ColorRGBA(0,0.4f,0,256), new ColorRGBA(0,0.6f,0,256), new ColorRGBA(0,0.8f,0,256), new ColorRGBA(0,1,0,256)};
+    
+    // array containing 5 markers on the top of the disk :
+    private final Geometry pointMarker[] = new Geometry[5];
+    
+    private final Application myApp;
+    
+    PDisk(float X_pos, float Y_pos, Application app, Node gameNode){
+        super("P", ColorRGBA.Green, Game.NEGDISK_R, Game.FRAME_THICKNESS, X_pos, Y_pos, app, gameNode);
+        if (app instanceof ServerMain){
+            this.X_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;
+            this.Y_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;
+        }
+        this.POINT = 5;
+        myApp = app;
+    }
+    
+    
+    @Override
+    protected void initialize(Application app) {
+//        simpleApp = (Main) app;
+        super.initialize(app);
+        
+        // create 5 markers on the top of the disk : 
+        Sphere point = new Sphere(30, 30, 2);
+        for (int i = 0; i < 5; i++){            
+            pointMarker[i] = new Geometry("geom_point", point);
+            Material mat_point = new Material(myApp.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+            mat_point.setColor("Color", ColorRGBA.White);
+            pointMarker[i].setMaterial(mat_point);            
+            super.node_disk.attachChild(pointMarker[i]);
+            pointMarker[i].setLocalTranslation(5 * i - 10, 0, Game.FRAME_THICKNESS/2);
+        }        
+    }
+    
+    @Override
+    protected void cleanup(Application app) {
+        
+    }
+    
+    @Override
+    protected void onEnable() {
+        super.onEnable();
+    }
+    
+    @Override
+    protected void onDisable() {
+        super.onDisable();
+    }
+    
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+    }
+    
+    public void updateDisk(){
+        // if there is still available point on the disk :
+        if(this.POINT > 0 ){
+            // decrease point for the next collision :
+            this.POINT -= 1;
+            
+            // change the color :
+            super.mat_disk.setColor("Color", colorTab[this.POINT]); 
+            
+            // delete one marker :
+            super.node_disk.detachChild(pointMarker[this.POINT]);  
+        }
+    }
+
+    @Override
+    public int reward(Disk d) {
+        int reward = this.POINT;
+        
+        // if it collide with a player disk then update the disk :
+        if(d.TYPE.equals("X")){
+            this.updateDisk();
+        }
+        
+        // return the reward :
+        return reward;        
+    }
+
+    @Override
+    void addToScore(int points) {
+        // no need to add point to the negativ disks
+    }
+
+    @Override
+    public int getID() {
+        return 0;
     }
 }
