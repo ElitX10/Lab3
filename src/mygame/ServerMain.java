@@ -12,6 +12,7 @@ import com.jme3.network.Server;
 import com.jme3.network.service.serializer.ServerSerializerRegistrationsService;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
@@ -22,7 +23,7 @@ import java.io.IOException;
  * @author normenhansen
  */
 public class ServerMain extends SimpleApplication implements ConnectionListener{
-    private Server myServer;
+    private Server myServer;   
     
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
