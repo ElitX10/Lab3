@@ -20,7 +20,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Node;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
-import mygame.Globals.GameBoard;
+//import mygame.Globals.GameBoard;
 
 /**
  *
@@ -31,7 +31,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     private Globals myGlobals = new Globals();
     private final Node NODE_GAME = new Node("NODE_GAME");
 //    private Ask ask = new Ask();
-//    private Game game = new Game();
+//    private Game game = new Game(this,NODE_GAME);
     
     public ClientMain(){
 //        ask.setEnabled(true);
