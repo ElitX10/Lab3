@@ -6,6 +6,7 @@
 package mygame;
 
 import com.jme3.app.Application;
+import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
@@ -73,8 +74,8 @@ class Game extends BaseAppState {
     private final float POS_TAB[] = {-POSNEG_MAX_COORD, -POSNEG_BETWEEN_COORD, 0, POSNEG_BETWEEN_COORD, POSNEG_MAX_COORD};
     
     // posible position for player disk :
-    private final float POS_PLAYER[][] = {{-POSNEG_BETWEEN_COORD,POSNEG_BETWEEN_COORD},{0,POSNEG_BETWEEN_COORD},{POSNEG_BETWEEN_COORD,POSNEG_BETWEEN_COORD},{-POSNEG_BETWEEN_COORD,0},{0,0},{POSNEG_BETWEEN_COORD,0},{-POSNEG_BETWEEN_COORD,-POSNEG_BETWEEN_COORD},{0,-POSNEG_BETWEEN_COORD},{POSNEG_BETWEEN_COORD,-POSNEG_BETWEEN_COORD}};
-    private int TAB_POS_PLAYER_LENGTH = 8; // size of the prvious tab is decreased every time we add a player (to avoid 2 player on 1 start position) 
+//    private final float POS_PLAYER[][] = {{-POSNEG_BETWEEN_COORD,POSNEG_BETWEEN_COORD},{0,POSNEG_BETWEEN_COORD},{POSNEG_BETWEEN_COORD,POSNEG_BETWEEN_COORD},{-POSNEG_BETWEEN_COORD,0},{0,0},{POSNEG_BETWEEN_COORD,0},{-POSNEG_BETWEEN_COORD,-POSNEG_BETWEEN_COORD},{0,-POSNEG_BETWEEN_COORD},{POSNEG_BETWEEN_COORD,-POSNEG_BETWEEN_COORD}};
+//    private int TAB_POS_PLAYER_LENGTH = 8; // size of the prvious tab is decreased every time we add a player (to avoid 2 player on 1 start position) 
     
 //    // Player control for 3 players :
 //    private final KeyTrigger PLAYER_KEY[][] = {{new KeyTrigger(KeyInput.KEY_I), new KeyTrigger(KeyInput.KEY_K), new KeyTrigger(KeyInput.KEY_L), new KeyTrigger(KeyInput.KEY_J)},
@@ -84,13 +85,17 @@ class Game extends BaseAppState {
     // list containing all the disks :
     private ArrayList<Disk> diskStore = new ArrayList<Disk>();
     
-    private final Application myApp;
+    private final SimpleApplication myApp;
     private final Node NODE_GAME;
     private boolean needCleaning = false;
     
-    public Game(Application app, Node gameNode){
+    public Game(SimpleApplication app, Node gameNode){
         myApp = app;
         NODE_GAME = gameNode;
+    }
+    
+    public ArrayList<Disk> getDiskStore(){
+        return diskStore;
     }
     
     @Override
@@ -127,7 +132,7 @@ class Game extends BaseAppState {
             NODE_GAME.detachAllChildren();
             
             //reset variables :
-            TAB_POS_PLAYER_LENGTH = 8;
+//            TAB_POS_PLAYER_LENGTH = 8;
             TIME = 30f;
             needCleaning = false;            
         }
@@ -163,7 +168,7 @@ class Game extends BaseAppState {
 //        } 
         
         // create the HUD
-//        initHUD();
+        initHUD();
     }
 
 //    private void newPlayer(int i){
@@ -186,13 +191,13 @@ class Game extends BaseAppState {
 //    }
     
     private void initHUD(){
-//        BitmapFont myFont = myApp.getAssetManager().loadFont("Interface/Fonts/Console.fnt");                        
-//        timeAndScore = new BitmapText(myFont, false);
-//        timeAndScore.setSize(myFont.getCharSet().getRenderedSize() * 4);
-//        timeAndScore.setColor(ColorRGBA.White);
-//        timeAndScore.setText("TIME : " + TIME);
-//        timeAndScore.setLocalTranslation(5, 700, 0);
-//        myApp.getGuiNode().attachChild(timeAndScore); 
+        BitmapFont myFont = myApp.getAssetManager().loadFont("Interface/Fonts/Console.fnt");                        
+        timeAndScore = new BitmapText(myFont, false);
+        timeAndScore.setSize(myFont.getCharSet().getRenderedSize() * 4);
+        timeAndScore.setColor(ColorRGBA.White);
+        timeAndScore.setText("TIME : " + TIME);
+        timeAndScore.setLocalTranslation(5, 700, 0);
+        myApp.getGuiNode().attachChild(timeAndScore); 
     }
     
     @Override
@@ -209,11 +214,11 @@ class Game extends BaseAppState {
     @Override
     public void update(float tpf) {  
         // collision between disks :
-//        for(int i = 0; i < diskStore.size(); i++){
-//            for(int other = i + 1; other < diskStore.size(); other++){
-//                diskStore.get(i).diskCollision(diskStore.get(other), tpf);
-//            }            
-//        }
+        for(int i = 0; i < diskStore.size(); i++){
+            for(int other = i + 1; other < diskStore.size(); other++){
+                diskStore.get(i).diskCollision(diskStore.get(other), tpf);
+            }            
+        }
         
         // time update :
         TIME -= tpf;
@@ -311,12 +316,12 @@ abstract class Disk extends BaseAppState {
     protected Node node_disk;
     
     // app :
-    private final Application myApp;
+    private final SimpleApplication myApp;
     
     // game node : 
     private final Node NODE_GAME;
         
-    public Disk(String type, ColorRGBA color, float radius, float size, float X_pos, float Y_pos, Application app, Node gameNode){
+    public Disk(String type, ColorRGBA color, float radius, float size, float X_pos, float Y_pos, SimpleApplication app, Node gameNode){
         myApp = app;
         NODE_GAME = gameNode;
         this.COLOR = color;
@@ -508,7 +513,7 @@ abstract class Disk extends BaseAppState {
 
 class NDisk extends Disk {    
     
-    NDisk(float X_pos, float Y_pos, Application app, Node gameNode){
+    NDisk(float X_pos, float Y_pos, SimpleApplication app, Node gameNode){
         super("N", ColorRGBA.Red, Game.NEGDISK_R, Game.FRAME_THICKNESS, X_pos, Y_pos, app, gameNode);
         if (app instanceof ServerMain){
             this.X_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;
@@ -569,7 +574,7 @@ class PDisk extends Disk {
     
     private final Application myApp;
     
-    PDisk(float X_pos, float Y_pos, Application app, Node gameNode){
+    PDisk(float X_pos, float Y_pos, SimpleApplication app, Node gameNode){
         super("P", ColorRGBA.Green, Game.NEGDISK_R, Game.FRAME_THICKNESS, X_pos, Y_pos, app, gameNode);
         if (app instanceof ServerMain){
             this.X_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;

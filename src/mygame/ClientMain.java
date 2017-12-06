@@ -8,6 +8,12 @@ package mygame;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
+import com.jme3.font.BitmapFont;
+import com.jme3.font.BitmapText;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.network.Client;
@@ -30,19 +36,22 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     private Client myClient;
     private Globals myGlobals = new Globals();
     private final Node NODE_GAME = new Node("NODE_GAME");
-//    private Ask ask = new Ask();
+    private Ask ask = new Ask();
     private Game game = new Game(this,NODE_GAME);
+    private boolean running = true;
+    private float time; 
+    private boolean start = true;
     
     public ClientMain(){
-//        ask.setEnabled(true);
-        game.setEnabled(true);
+        ask.setEnabled(true);
+        game.setEnabled(false);
         stateManager.attach(game);
-//        stateManager.attach(ask);        
+        stateManager.attach(ask);        
     }
     
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
-        app.start(JmeContext.Type.Display);
+        app.start(/*JmeContext.Type.Display*/);
     }
 
     @Override
@@ -86,6 +95,20 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         // camera parameter
         cam.setLocation(new Vector3f(-84f, 0.0f, 720f));
         cam.setRotation(new Quaternion(0.0f, 1.0f, 0.0f, 0.0f));
+        
+        if (running) {
+            // get the time :
+            time = game.getTime();System.out.println(time);
+            if (time <= 0f || start) {
+                game.setEnabled(false);
+                inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
+                inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
+                inputManager.addListener(actionListener, "Restart", "Exit");
+                ask.setEnabled(true);
+                running = false;
+                start = false;
+            }
+        }
     }
 
     @Override
@@ -112,4 +135,62 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         }
     }
 
+    private ActionListener actionListener = new ActionListener() {
+        @Override
+        public void onAction(String name, boolean isPressed, float tpf) {
+            if (isPressed) { // on the key being pressed...
+                if (name.equals("Exit")) {
+                    ClientMain.this.stop(); //terminate jMonkeyEngine app
+                    // System.exit(0) would also work 
+                } else if (name.equals("Restart")) {
+                    //SEND MESSAGE TO THE SERVER HERE !
+                    // PUT THIS WHEN ANSWER IS RECEIVED : (NOT HERE)
+//                    ask.setEnabled(false);
+//                    // take away the text asking 
+//                    game.setEnabled(true); // restart the game 
+//                    running = true;
+//                    // disable further calls - this also removes the second 
+//                    // event (the key release) that otherwise would follow 
+//                    // after a key being (de-) pressed
+//                    inputManager.deleteMapping("Restart");
+//                    inputManager.deleteMapping("Exit");
+                }
+            }
+        }
+    };
+    
+}
+
+
+//-------------------------------------------------ASK--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Ask extends BaseAppState {
+    private SimpleApplication sapp;
+
+    @Override
+    protected void initialize(Application app) {
+        sapp = (SimpleApplication) app;
+    }
+
+    @Override
+    protected void cleanup(Application app) {
+        
+    }
+
+    @Override
+    protected void onEnable() {
+        // create a text in the form of a bitmap, and add it to the GUI pane : 
+        BitmapFont myFont = sapp.getAssetManager().loadFont("Interface/Fonts/Console.fnt");
+        BitmapText hudText = new BitmapText(myFont, false);
+        hudText.setSize(myFont.getCharSet().getRenderedSize() * 5);
+        hudText.setColor(ColorRGBA.Red);
+        hudText.setText("PRESS P TO \nSTART A NEW\n GAME AND \nE TO EXIT");
+        hudText.setLocalTranslation(5, 250, 0);
+        sapp.getGuiNode().attachChild(hudText);
+    }
+
+    @Override
+    protected void onDisable() {
+        sapp.getGuiNode().detachAllChildren();
+    }
 }
