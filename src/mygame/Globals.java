@@ -659,3 +659,215 @@ class PDisk extends Disk {
         return 0;
     }
 }
+
+//------------------------------------------------- PLAYER --------------------------------------------------------------------------------------------------------------------------------------------------------
+
+abstract class Player extends Disk { 
+    private int id;
+    private final int SPEED_ACCELERATION = 60; 
+    private static int playerNumber = 0;
+    private SimpleApplication myApp;
+      
+    public Player(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame){
+        super("X", ColorRGBA.Blue, Game.PLAYER_R, Game.FRAME_THICKNESS, X_pos, Y_pos, app, NodeGame);
+        this.X_SPEED = 0;
+        this.Y_SPEED = 0;
+        this.POINT = 0;
+        
+        // increase the number of player every time we create one player  
+        playerNumber++;
+        
+        // give an id to every player to separate input later and for displaying the score on the sceen for each player :
+        this.id = playerNumber;
+    }
+    
+    @Override
+    public int getID(){
+        return this.id;
+    }    
+    
+    @Override
+    protected void initialize(Application app) {        
+//        simpleApp = (Main) app;
+        super.initialize(app);        
+        
+        // player marker on top of the disk :
+        this.newPlayerMarker(this.id);//       
+    }
+    
+    private void newPlayerMarker(int playerID){        
+        Box box_id = new Box(1,Game.PLAYER_R/2,1);
+        Material mat_id = new Material(myApp.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        mat_id.setColor("Color", ColorRGBA.Red);
+        Node node_marker = new Node("node_marker");
+        switch (playerID){
+            case 1 :
+                Geometry geom_id1 = new Geometry("geom_id", box_id);
+                geom_id1.setMaterial(mat_id);
+                node_marker.attachChild(geom_id1);
+                break;
+            case 2 :
+                Geometry geom_id2 = new Geometry("geom_id", box_id);
+                geom_id2.setMaterial(mat_id);
+                node_marker.attachChild(geom_id2);
+                Geometry geom2_id2 = new Geometry("geom_id", box_id);
+                geom2_id2.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id2);
+                geom_id2.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom2_id2.setLocalTranslation(-Game.PLAYER_R/4, 0, 0);
+                break;
+            case 3 :
+                Geometry geom_id3 = new Geometry("geom_id", box_id);
+                geom_id3.setMaterial(mat_id);
+                node_marker.attachChild(geom_id3);
+                Geometry geom2_id3 = new Geometry("geom_id", box_id);
+                geom2_id3.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id3);
+                Geometry geom3_id3 = new Geometry("geom_id", box_id);
+                geom3_id3.setMaterial(mat_id);
+                node_marker.attachChild(geom3_id3);
+                geom_id3.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom2_id3.setLocalTranslation(-Game.PLAYER_R/4, 0, 0);
+                break;
+            case 4 :
+                Geometry geom_id4 = new Geometry("geom_id", box_id);
+                geom_id4.setMaterial(mat_id);
+                node_marker.attachChild(geom_id4);
+                Geometry geom2_id4 = new Geometry("geom_id", box_id);
+                geom2_id4.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id4);
+                Geometry geom3_id4 = new Geometry("geom_id", box_id);
+                geom3_id4.setMaterial(mat_id);
+                node_marker.attachChild(geom3_id4);
+                geom_id4.setLocalTranslation(-Game.PLAYER_R/4, 0, 0);
+                geom2_id4.setLocalTranslation(Game.PLAYER_R/16, 0, 0);
+                geom3_id4.setLocalTranslation(4*Game.PLAYER_R/16, 0, 0);
+                geom2_id4.rotate(0, 0, -25);
+                geom3_id4.rotate(0, 0, 25);
+                break;
+            case 5 :
+                Geometry geom_id5 = new Geometry("geom_id", box_id);
+                geom_id5.setMaterial(mat_id);
+                node_marker.attachChild(geom_id5);
+                Geometry geom2_id5 = new Geometry("geom_id", box_id);
+                geom2_id5.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id5);
+                geom_id5.setLocalTranslation(-Game.PLAYER_R/16, 0, 0);
+                geom2_id5.setLocalTranslation(2*Game.PLAYER_R/16, 0, 0);
+                geom_id5.rotate(0, 0, -25);
+                geom2_id5.rotate(0, 0, 25);
+                break;
+            case 6 :
+                Geometry geom_id6 = new Geometry("geom_id", box_id);
+                geom_id6.setMaterial(mat_id);
+                node_marker.attachChild(geom_id6);
+                Geometry geom2_id6 = new Geometry("geom_id", box_id);
+                geom2_id6.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id6);
+                Geometry geom3_id6 = new Geometry("geom_id", box_id);
+                geom3_id6.setMaterial(mat_id);
+                node_marker.attachChild(geom3_id6);
+                geom_id6.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom2_id6.setLocalTranslation(-Game.PLAYER_R/16, 0, 0);
+                geom3_id6.setLocalTranslation(-4*Game.PLAYER_R/16, 0, 0);
+                geom2_id6.rotate(0, 0, 25);
+                geom3_id6.rotate(0, 0, -25);
+                break;
+            case 7 :
+                Geometry geom_id7 = new Geometry("geom_id", box_id);
+                geom_id7.setMaterial(mat_id);
+                node_marker.attachChild(geom_id7);
+                Geometry geom2_id7= new Geometry("geom_id", box_id);
+                geom2_id7.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id7);
+                Geometry geom3_id7 = new Geometry("geom_id", box_id);
+                geom3_id7.setMaterial(mat_id);
+                node_marker.attachChild(geom3_id7);
+                Geometry geom4_id7 = new Geometry("geom_id", box_id);
+                geom4_id7.setMaterial(mat_id);
+                node_marker.attachChild(geom4_id7);
+                geom_id7.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom2_id7.setLocalTranslation(-3*Game.PLAYER_R/16, 0, 0);
+                geom3_id7.setLocalTranslation(-7*Game.PLAYER_R/16, 0, 0);
+                geom4_id7.setLocalTranslation(Game.PLAYER_R/2, 0, 0);
+                geom2_id7.rotate(0, 0, 25);
+                geom3_id7.rotate(0, 0, -25);
+                break;
+            case 8 :
+                Geometry geom_id8 = new Geometry("geom_id", box_id);
+                geom_id8.setMaterial(mat_id);
+                node_marker.attachChild(geom_id8);
+                Geometry geom2_id8= new Geometry("geom_id", box_id);
+                geom2_id8.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id8);
+                Geometry geom3_id8 = new Geometry("geom_id", box_id);
+                geom3_id8.setMaterial(mat_id);
+                node_marker.attachChild(geom3_id8);
+                Geometry geom4_id8 = new Geometry("geom_id", box_id);
+                geom4_id8.setMaterial(mat_id);
+                node_marker.attachChild(geom4_id8);
+                Geometry geom5_id8 = new Geometry("geom_id", box_id);
+                geom5_id8.setMaterial(mat_id);
+                node_marker.attachChild(geom5_id8);
+                geom2_id8.setLocalTranslation(-5*Game.PLAYER_R/16, 0, 0);
+                geom3_id8.setLocalTranslation(-8*Game.PLAYER_R/16, 0, 0);
+                geom4_id8.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom5_id8.setLocalTranslation(Game.PLAYER_R/2, 0, 0);
+                geom2_id8.rotate(0, 0, 25);
+                geom3_id8.rotate(0, 0, -25);
+                break;
+            case 9 :
+                Geometry geom_id9 = new Geometry("geom_id", box_id);
+                geom_id9.setMaterial(mat_id);
+                node_marker.attachChild(geom_id9);
+                Geometry geom2_id9 = new Geometry("geom_id", box_id);
+                geom2_id9.setMaterial(mat_id);
+                node_marker.attachChild(geom2_id9);
+                Geometry geom3_id9 = new Geometry("geom_id", box_id);
+                geom3_id9.setMaterial(mat_id);
+                node_marker.attachChild(geom3_id9);
+                geom_id9.setLocalTranslation(-Game.PLAYER_R/4, 0, 0);
+                geom2_id9.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom3_id9.setLocalTranslation(Game.PLAYER_R/4, 0, 0);
+                geom2_id9.rotate(0, 0, 35);
+                geom3_id9.rotate(0, 0, -35);
+                break;
+            default: break;
+        }
+        node_marker.setLocalTranslation(0, 0, Game.FRAME_THICKNESS/2);
+        super.node_disk.attachChild(node_marker);
+    }
+    
+    @Override
+    protected void cleanup(Application app) {
+        
+    }
+    
+    @Override
+    protected void onEnable() {
+        super.onEnable();
+    }
+    
+    @Override
+    protected void onDisable() {
+        super.onDisable();
+                
+        // reset the number of player :
+        playerNumber = 0;
+    }
+    
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+    }
+        
+    @Override
+    public int reward(Disk d) {
+        return 0;
+    }
+
+    @Override
+    void addToScore(int points) {
+        this.POINT += points;
+    }
+}
