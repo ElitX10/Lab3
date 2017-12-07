@@ -16,6 +16,9 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import mygame.Globals.*;
 
 /**
  * This is the Main Class of your Game. You should only do initialization here.
@@ -24,9 +27,17 @@ import java.io.IOException;
  */
 public class ServerMain extends SimpleApplication implements ConnectionListener{
     private Server myServer;   
+    private final Node NODE_GAME = new Node("NODE_GAME");
+    private Game game = new Game(this,NODE_GAME);
+    
+    public ServerMain(){
+        game.setEnabled(false);
+        stateManager.attach(game);
+    }
     
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
+        Globals.initialiseSerializables();
         app.start(JmeContext.Type.Headless);
     }
 
@@ -41,6 +52,11 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         
         // add connection Listener :
         myServer.addConnectionListener(this);
+        
+        // add message listenter : 
+        myServer.addMessageListener(new ServerListener(),
+                                    TimeMessage.class,
+                                    StartGameMessage.class);
     }
     
     // to ensure to close the net connection cleanly :
@@ -76,7 +92,26 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
 
         @Override
         public void messageReceived(HostedConnection source, Message m) {
-
+            if (m instanceof TimeMessage){
+//                System.out.println("ask for time");
+//                TimeMessage giveTime = new TimeMessage(38);
+//                myServer.broadcast(giveTime);
+            }else if (m instanceof StartGameMessage){
+                System.out.println("ask for starting a new game");
+                Future result = ServerMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        ServerMain.this.game.setEnabled(true);
+                        return true;
+                    }
+                });
+                
+                // send player informations :
+                
+                //send a message to start the game for all clients :
+                StartGameMessage turnGameOn = new StartGameMessage();
+                myServer.broadcast(turnGameOn);
+            }
         }        
     }
 }

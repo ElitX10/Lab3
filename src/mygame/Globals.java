@@ -15,6 +15,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
+import com.jme3.network.serializing.Serializer;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -34,12 +35,42 @@ public class Globals {
     public static final String DEFAULT_SERVER = "localhost";
     public static final int VERSION = 1;
     public static final int DEFAULT_PORT = 6143;
-        
+    
+// register all message types there are
+    public static void initialiseSerializables() {
+        Serializer.registerClass(TimeMessage.class);
+        Serializer.registerClass(StartGameMessage.class);
+    }   
     
     // abstract message :
     public static abstract class MyAbstractMessage extends AbstractMessage{
     
-    }   
+    } 
+    
+    // time message :
+    @Serializable
+    public static class TimeMessage extends MyAbstractMessage{
+        private float TIME;
+        
+        public TimeMessage() {
+        }
+        
+        public TimeMessage(float time){
+            this.TIME = time;
+        }        
+        
+        public float getTime(){
+            return TIME;
+        }
+    }
+    
+    @Serializable
+    public static class StartGameMessage extends MyAbstractMessage{
+        public StartGameMessage(){
+            
+        }
+    }
+    
 }
 
 //-------------------------------------------------GAME--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -127,6 +158,7 @@ class Game extends BaseAppState {
 
     @Override
     protected void onEnable() {
+        System.out.println("game : on");
         if (needCleaning) {
             // detach all disk from the game when enabled :
             NODE_GAME.detachAllChildren();

@@ -26,7 +26,9 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Node;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
-//import mygame.Globals.GameBoard;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import mygame.Globals.*;
 
 /**
  *
@@ -51,6 +53,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
+        Globals.initialiseSerializables();
         app.start(/*JmeContext.Type.Display*/);
     }
 
@@ -64,6 +67,11 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         
         // add client listener :
         myClient.addClientStateListener(this);
+        
+        // add message listenter :
+        myClient.addMessageListener(new ClientListener(),
+                                    TimeMessage.class,
+                                    StartGameMessage.class);
         
         // unable camera mvt with mouse : 
         flyCam.setEnabled(false); 
@@ -118,7 +126,9 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
 
     @Override
     public void clientConnected(Client client) {
-        System.out.println("Client #" + client.getId() + " is ready."); 
+        System.out.println("Client #" + client.getId() + " is ready.");
+//        TimeMessage timeMess = new TimeMessage();
+//        myClient.send(timeMess);
     }
 
     @Override
@@ -131,7 +141,22 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
 
         @Override
         public void messageReceived(Client source, Message m) {
-            
+            if (m instanceof TimeMessage){
+//                TimeMessage TMess = (TimeMessage) m ; 
+//                System.out.println("Time is : " + TMess.getTime());
+            }else if (m instanceof StartGameMessage){
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        ClientMain.this.ask.setEnabled(false);
+                        ClientMain.this.game.setEnabled(true);
+                        ClientMain.this.running = true;
+                        ClientMain.this.inputManager.deleteMapping("Restart");
+                        ClientMain.this.inputManager.deleteMapping("Exit");
+                        return true;
+                    }
+                });
+            }
         }
     }
 
@@ -144,6 +169,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                     // System.exit(0) would also work 
                 } else if (name.equals("Restart")) {
                     //SEND MESSAGE TO THE SERVER HERE !
+                    StartGameMessage newGame = new StartGameMessage();
+                    myClient.send(newGame);
                     // PUT THIS WHEN ANSWER IS RECEIVED : (NOT HERE)
 //                    ask.setEnabled(false);
 //                    // take away the text asking 
