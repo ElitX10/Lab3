@@ -30,6 +30,9 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     private final Node NODE_GAME = new Node("NODE_GAME");
     private Game game = new Game(this,NODE_GAME);
     
+    private final int sendTimeDelay = 3;
+    private float timeDelay = 0;
+    
     public ServerMain(){
         game.setEnabled(false);
         stateManager.attach(game);
@@ -71,6 +74,15 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     @Override
     public void simpleUpdate(float tpf) {
         //TODO: add update code
+        if (game.isEnabled()){
+            timeDelay += tpf;
+            if (timeDelay >= sendTimeDelay){
+                TimeMessage tMess = new TimeMessage(game.getTime());
+                myServer.broadcast(tMess);
+                timeDelay = 0 ;
+            }   
+        }
+        
     }
 
     @Override
@@ -81,6 +93,11 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     @Override
     public void connectionAdded(Server server, HostedConnection client) {
         System.out.println("Server knows that client #" + client.getId() + " is ready.");
+        if (game.isEnabled()){
+            client.close("Game is running ! Please come later ;)");
+        } else {
+            //TODO : ADD NEW PLAYER HERE : 
+        }
     }
 
     @Override

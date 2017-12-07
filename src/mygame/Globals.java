@@ -70,7 +70,7 @@ public class Globals {
             
         }
     }
-    
+        
 }
 
 //-------------------------------------------------GAME--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -269,6 +269,11 @@ class Game extends BaseAppState {
     public float getTime(){
         return TIME;
     }    
+    
+    public void setTime(float newTime){
+        TIME = newTime;
+//        System.out.println("new time : " + TIME + "-----------------------------------------------");
+    }
     
     class GameBoard {
         private final Node NODE_GAME_BOARD = new Node("NODE_GAME_BOARD"); 

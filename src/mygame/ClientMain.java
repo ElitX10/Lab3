@@ -106,7 +106,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         
         if (running) {
             // get the time :
-            time = game.getTime();System.out.println(time);
+            time = game.getTime();
+//            System.out.println(time);
             if (time <= 0f || start) {
                 game.setEnabled(false);
                 inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
@@ -134,7 +135,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     @Override
     public void clientDisconnected(Client client, DisconnectInfo info) {
         System.out.println("Client #" + client.getId() + " has left.");
-
+        System.out.println(info);
+        ClientMain.this.stop();
     }
     
     public class ClientListener implements MessageListener<Client> {
@@ -142,6 +144,14 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         @Override
         public void messageReceived(Client source, Message m) {
             if (m instanceof TimeMessage){
+                final TimeMessage tMess = (TimeMessage) m;
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        ClientMain.this.game.setTime(tMess.getTime());
+                        return true;
+                    }
+                }); 
 //                TimeMessage TMess = (TimeMessage) m ; 
 //                System.out.println("Time is : " + TMess.getTime());
             }else if (m instanceof StartGameMessage){
