@@ -77,13 +77,17 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         myClient.addMessageListener(new ClientListener(),
                                     TimeMessage.class,
                                     StartGameMessage.class,
-                                    PlayerPosMessage.class);
+                                    PlayerPosMessage.class,
+                                    EndGameMessage.class);
         
         // unable camera mvt with mouse : 
         flyCam.setEnabled(false); 
         
         //node containing all the other new node on the game :
         rootNode.attachChild(NODE_GAME);
+        
+        setDisplayStatView(false);
+        setDisplayFps(false); 
     }
     
     public Globals getMyGlobals(){
@@ -202,6 +206,17 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                             ClientMain.this.getStateManager().attach(player); 
                             PlayerStore.add(player);
                         }
+                        return true;
+                    }
+                });
+            }else if (m instanceof EndGameMessage){
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        ClientMain.this.game.setEnabled(false);
+                        ClientMain.this.ask.setEnabled(true);
+                        PlayerStore.clear();
+                        Player.resetPlayerNumber();
                         return true;
                     }
                 });

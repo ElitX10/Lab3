@@ -98,14 +98,21 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         
         // send time information : 
         if (game.isEnabled()){
+            // send time to clients :
             timeDelay += tpf;
             if (timeDelay >= sendTimeDelay){
                 TimeMessage tMess = new TimeMessage(game.getTime());
                 myServer.broadcast(tMess);
                 timeDelay = 0 ;
-            }   
+            } 
+            // end of the game :
+            if(game.getTime() == 0){
+                game.setEnabled(false);
+                EndGameMessage endMess = new EndGameMessage();
+                myServer.broadcast(endMess);
+                Player.resetPlayerNumber();
+            }
         }
-        
     }
 
     @Override

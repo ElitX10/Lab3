@@ -41,6 +41,7 @@ public class Globals {
         Serializer.registerClass(TimeMessage.class);
         Serializer.registerClass(StartGameMessage.class);
         Serializer.registerClass(PlayerPosMessage.class);
+        Serializer.registerClass(EndGameMessage.class);
     }   
     
     // abstract message :
@@ -98,6 +99,14 @@ public class Globals {
         
         public float[] getY(){
             return Y_COORD;
+        }
+    }
+    
+    @Serializable
+    public static class EndGameMessage extends MyAbstractMessage{
+        // TODO : ADD WINNER INFORMATION :
+        public EndGameMessage(){
+            
         }
     }
 }
@@ -757,7 +766,11 @@ abstract class Player extends Disk {
         // give an id to every player to separate input later and for displaying the score on the sceen for each player :
         this.id = playerNumber;
     }
-    
+    public static void resetPlayerNumber(){
+        playerNumber = 0;
+    }
+            
+            
     @Override
     public int getID(){
         return this.id;
