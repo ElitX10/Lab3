@@ -250,6 +250,9 @@ class Game extends BaseAppState {
 //        POS_PLAYER[randomIndex][1] = sav[1];
 //        TAB_POS_PLAYER_LENGTH --;
 //    }
+    public void setScoreHUD(String score){
+        timeAndScore.setText("TIME : " + df.format(TIME) + "\n" + score);
+    }
     
     private void initHUD(){
         BitmapFont myFont = myApp.getAssetManager().loadFont("Interface/Fonts/Console.fnt");                        

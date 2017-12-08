@@ -110,6 +110,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         cam.setLocation(new Vector3f(-84f, 0.0f, 720f));
         cam.setRotation(new Quaternion(0.0f, 1.0f, 0.0f, 0.0f));
         
+        // time :
         if (running) {
             // get the time :
             time = game.getTime();
@@ -124,6 +125,15 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                 start = false;
             }
         }
+        
+        if (game.isEnabled()){
+            String text = "";
+            for(int i = 0; i < PlayerStore.size(); i++){
+                text += "\nPlayer " + PlayerStore.get(i).getID() + " : " + PlayerStore.get(i).POINT;
+            }
+            game.setScoreHUD(text);  
+        }
+        
     }
 
     @Override
