@@ -40,6 +40,7 @@ public class Globals {
     public static void initialiseSerializables() {
         Serializer.registerClass(TimeMessage.class);
         Serializer.registerClass(StartGameMessage.class);
+        Serializer.registerClass(PlayerPosMessage.class);
     }   
     
     // abstract message :
@@ -70,7 +71,35 @@ public class Globals {
             
         }
     }
+     
+    @Serializable
+    public static class PlayerPosMessage extends MyAbstractMessage{
+        float X_COORD[];
+        float Y_COORD[];
+        int hosts[];
         
+        public PlayerPosMessage(){
+            
+        }
+        
+        public PlayerPosMessage(float x[], float y[], int hosts[]){
+            X_COORD = x;
+            Y_COORD = y;
+            this.hosts = hosts;
+        }
+        
+        public int[] getHosts(){
+            return hosts;
+        }
+        
+        public float[] getX(){
+            return X_COORD;
+        }
+        
+        public float[] getY(){
+            return Y_COORD;
+        }
+    }
 }
 
 //-------------------------------------------------GAME--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -540,6 +569,14 @@ abstract class Disk extends BaseAppState {
         }       
     }
     
+    public void setXPos(float newX){
+        this.X_POS = newX;
+    }
+    
+    public void setYPos(float newY){
+        this.Y_POS = newY;
+    }
+    
     // functions specific for each kind of disk :
     abstract public int reward(Disk d);
     abstract void addToScore(int points);
@@ -710,7 +747,7 @@ abstract class Player extends Disk {
         this.X_SPEED = 0;
         this.Y_SPEED = 0;
         this.POINT = 0;
-        
+        this.myApp = app;
         // increase the number of player every time we create one player  
         playerNumber++;
         

@@ -12,6 +12,7 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Quaternion;
@@ -26,6 +27,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Node;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import mygame.Globals.*;
@@ -43,6 +45,9 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     private boolean running = true;
     private float time; 
     private boolean start = true;
+    
+    // list containing all players :
+    private ArrayList<ClientPlayer> PlayerStore = new ArrayList<ClientPlayer>();
     
     public ClientMain(){
         ask.setEnabled(true);
@@ -71,7 +76,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         // add message listenter :
         myClient.addMessageListener(new ClientListener(),
                                     TimeMessage.class,
-                                    StartGameMessage.class);
+                                    StartGameMessage.class,
+                                    PlayerPosMessage.class);
         
         // unable camera mvt with mouse : 
         flyCam.setEnabled(false); 
@@ -166,6 +172,29 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                         return true;
                     }
                 });
+            }else if (m instanceof PlayerPosMessage){
+                final PlayerPosMessage playerPos = (PlayerPosMessage) m;
+                final int myHost = source.getId();
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        float[] X_Pos = playerPos.getX();
+                        float[] Y_Pos = playerPos.getY();
+                        int[] Hosts = playerPos.getHosts();
+                        for (int i = 0; i < X_Pos.length; i ++){
+                            ClientPlayer player;                            
+                            if (Hosts[i] == myHost){                                
+                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, true);
+                            }else{
+                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, false);
+                            }
+                            player.setEnabled(true);
+                            ClientMain.this.getStateManager().attach(player); 
+                            PlayerStore.add(player);
+                        }
+                        return true;
+                    }
+                });
             }
         }
     }
@@ -180,17 +209,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                 } else if (name.equals("Restart")) {
                     //SEND MESSAGE TO THE SERVER HERE !
                     StartGameMessage newGame = new StartGameMessage();
-                    myClient.send(newGame);
-                    // PUT THIS WHEN ANSWER IS RECEIVED : (NOT HERE)
-//                    ask.setEnabled(false);
-//                    // take away the text asking 
-//                    game.setEnabled(true); // restart the game 
-//                    running = true;
-//                    // disable further calls - this also removes the second 
-//                    // event (the key release) that otherwise would follow 
-//                    // after a key being (de-) pressed
-//                    inputManager.deleteMapping("Restart");
-//                    inputManager.deleteMapping("Exit");
+                    myClient.send(newGame);                    
                 }
             }
         }
@@ -230,4 +249,51 @@ class Ask extends BaseAppState {
     protected void onDisable() {
         sapp.getGuiNode().detachAllChildren();
     }
+}
+
+//-------------------------------------------------CLIENT_PLAYER--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class ClientPlayer extends Player{
+    private boolean keyTrigger;
+    private final KeyTrigger UP = new KeyTrigger(KeyInput.KEY_Z);
+    private final KeyTrigger DOWN = new KeyTrigger(KeyInput.KEY_S);
+    private final KeyTrigger RIGHT = new KeyTrigger(KeyInput.KEY_Q);
+    private final KeyTrigger LEFT = new KeyTrigger(KeyInput.KEY_D);
+    
+    public ClientPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, boolean isControl) {
+        super(X_pos, Y_pos, app, NodeGame);
+        this.keyTrigger = isControl;
+    }
+    @Override
+    protected void initialize(Application app) {
+        super.initialize(app);
+        if (keyTrigger){
+            app.getInputManager().addMapping("UP", this.UP);
+            app.getInputManager().addMapping("DOWN", this.DOWN);
+            app.getInputManager().addMapping("LEFT", this.LEFT);
+            app.getInputManager().addMapping("RIGHT", this.RIGHT);
+            app.getInputManager().addListener(analogListener, "UP", "DOWN", "LEFT","RIGHT");
+        }
+    }
+    
+    private AnalogListener analogListener = new AnalogListener() {
+        @Override
+        public void onAnalog(String name, float value, float tpf) {
+            if (isEnabled()){
+                // add velocity when input are pressed :
+                if (name.equals("UP")){
+//                    Y_SPEED += SPEED_ACCELERATION * tpf;
+                }
+                if (name.equals("DOWN")){
+//                    Y_SPEED -= SPEED_ACCELERATION * tpf; 
+                }
+                if (name.equals("LEFT")){
+//                    X_SPEED -= SPEED_ACCELERATION * tpf;
+                }
+                if (name.equals("RIGHT")){
+//                    X_SPEED += SPEED_ACCELERATION * tpf;
+                }
+            }            
+        }
+    };
 }

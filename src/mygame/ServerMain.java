@@ -16,6 +16,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import mygame.Globals.*;
@@ -28,7 +29,27 @@ import mygame.Globals.*;
 public class ServerMain extends SimpleApplication implements ConnectionListener{
     private Server myServer;   
     private final Node NODE_GAME = new Node("NODE_GAME");
-    private Game game = new Game(this,NODE_GAME);
+    private final Game game = new Game(this,NODE_GAME);
+    
+    // list containing all players :
+    private ArrayList<ServerPlayer> PlayerStore = new ArrayList<ServerPlayer>();
+    
+    // posible position for player disk :
+    private final float POS_PLAYER[][] = {{-Game.POSNEG_BETWEEN_COORD,Game.POSNEG_BETWEEN_COORD},
+                                        {0,Game.POSNEG_BETWEEN_COORD},
+                                        {Game.POSNEG_BETWEEN_COORD,Game.POSNEG_BETWEEN_COORD},
+                                        {-Game.POSNEG_BETWEEN_COORD,0},
+                                        {0,0},
+                                        {Game.POSNEG_BETWEEN_COORD,0},
+                                        {-Game.POSNEG_BETWEEN_COORD,-Game.POSNEG_BETWEEN_COORD},
+                                        {0,-Game.POSNEG_BETWEEN_COORD},
+                                        {Game.POSNEG_BETWEEN_COORD,-Game.POSNEG_BETWEEN_COORD}};
+    private int TAB_POS_PLAYER_LENGTH = 8; // size of the prvious tab is decreased every time we add a player (to avoid 2 player on 1 start position) 
+
+    // array with players position :
+    private float X_Player[];
+    private float Y_Player[];
+    private int Host_Player[];
     
     private final int sendTimeDelay = 3;
     private float timeDelay = 0;
@@ -74,6 +95,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     @Override
     public void simpleUpdate(float tpf) {
         //TODO: add update code
+        
+        // send time information : 
         if (game.isEnabled()){
             timeDelay += tpf;
             if (timeDelay >= sendTimeDelay){
@@ -93,10 +116,12 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     @Override
     public void connectionAdded(Server server, HostedConnection client) {
         System.out.println("Server knows that client #" + client.getId() + " is ready.");
-        if (game.isEnabled()){
-            client.close("Game is running ! Please come later ;)");
+        // kick players if the game is running, otherwise create a new player disk
+        if (game.isEnabled() || myServer.getConnections().size() > 9){
+            client.close("Game is running or full ! Please come later ;)");
         } else {
-            //TODO : ADD NEW PLAYER HERE : 
+            //TODO : ADD NEW PLAYER HERE :
+            PlayerStore.add(new ServerPlayer(0, 0, this, NODE_GAME, client.getId()));
         }
     }
 
@@ -115,20 +140,75 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
 //                myServer.broadcast(giveTime);
             }else if (m instanceof StartGameMessage){
                 System.out.println("ask for starting a new game");
+                
                 Future result = ServerMain.this.enqueue(new Callable() {
                     @Override
-                    public Object call() throws Exception {
+                    public Object call() throws Exception {                        
+                        // turn on the game :
                         ServerMain.this.game.setEnabled(true);
                         return true;
                     }
                 });
                 
+                // assigne position for each player : 
+                ServerMain.this.setRandomPosition();
+                // reset the array size : 
+                ServerMain.this.TAB_POS_PLAYER_LENGTH = 8;
                 // send player informations :
+//                System.out.println(X_Player[0]);
+                PlayerPosMessage initPos = new PlayerPosMessage(X_Player, Y_Player, Host_Player);
+                myServer.broadcast(initPos);
                 
                 //send a message to start the game for all clients :
                 StartGameMessage turnGameOn = new StartGameMessage();
                 myServer.broadcast(turnGameOn);
             }
         }        
+    }
+    
+    private void setRandomPosition(){
+        float[] X_Pos = new float[PlayerStore.size()];
+        float[] Y_Pos = new float[PlayerStore.size()];
+        int[] Hosts = new int[PlayerStore.size()];
+        
+        for (int i = 0; i<PlayerStore.size();i++ ){            
+            // random index :
+            int randomIndex = (int)(Math.random() * (TAB_POS_PLAYER_LENGTH + 1));
+            
+            // set the position for players :
+            PlayerStore.get(i).setXPos(POS_PLAYER[randomIndex][0]);
+            PlayerStore.get(i).setYPos(POS_PLAYER[randomIndex][1]);
+            
+            //TODO : also store the position in an array for sending : 
+            X_Pos[i] = POS_PLAYER[randomIndex][0];
+            Y_Pos[i] = POS_PLAYER[randomIndex][1];
+            Hosts[i] = PlayerStore.get(i).getHost();
+            
+            // update the array with all posible position : 
+            float sav[] = {POS_PLAYER[TAB_POS_PLAYER_LENGTH][0],POS_PLAYER[TAB_POS_PLAYER_LENGTH][1]};
+            POS_PLAYER[TAB_POS_PLAYER_LENGTH][0] = POS_PLAYER[randomIndex][0];
+            POS_PLAYER[TAB_POS_PLAYER_LENGTH][1] = POS_PLAYER[randomIndex][1];
+            POS_PLAYER[randomIndex][0] = sav[0];
+            POS_PLAYER[randomIndex][1] = sav[1];
+            TAB_POS_PLAYER_LENGTH --;
+        }
+        X_Player = X_Pos;
+        Y_Player = Y_Pos;
+        Host_Player = Hosts;
+    }
+}
+
+//-------------------------------------------------SERVER_PLAYER--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class ServerPlayer extends Player {
+    private final int HOST;
+    
+    public ServerPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, int host) {
+        super(X_pos, Y_pos, app, NodeGame);
+        this.HOST = host;
+    }  
+    
+    public int getHost(){
+        return this.HOST;
     }
 }
