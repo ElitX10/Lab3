@@ -146,22 +146,23 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                     public Object call() throws Exception {                        
                         // turn on the game :
                         ServerMain.this.game.setEnabled(true);
+                        // assigne position for each player : 
+                        ServerMain.this.setRandomPosition();
+                        // reset the array size : 
+                        ServerMain.this.TAB_POS_PLAYER_LENGTH = 8;
+                        // send player informations :
+        //                System.out.println(X_Player[0]);
+                        PlayerPosMessage initPos = new PlayerPosMessage(X_Player, Y_Player, Host_Player);
+                        myServer.broadcast(initPos);
+
+                        //send a message to start the game for all clients :
+                        StartGameMessage turnGameOn = new StartGameMessage();
+                        myServer.broadcast(turnGameOn);
                         return true;
                     }
                 });
                 
-                // assigne position for each player : 
-                ServerMain.this.setRandomPosition();
-                // reset the array size : 
-                ServerMain.this.TAB_POS_PLAYER_LENGTH = 8;
-                // send player informations :
-//                System.out.println(X_Player[0]);
-                PlayerPosMessage initPos = new PlayerPosMessage(X_Player, Y_Player, Host_Player);
-                myServer.broadcast(initPos);
                 
-                //send a message to start the game for all clients :
-                StartGameMessage turnGameOn = new StartGameMessage();
-                myServer.broadcast(turnGameOn);
             }
         }        
     }
