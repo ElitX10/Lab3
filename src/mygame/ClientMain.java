@@ -88,6 +88,12 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         
         setDisplayStatView(false);
         setDisplayFps(false); 
+        
+        game.setEnabled(false);
+        inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
+        inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
+        inputManager.addListener(actionListener, "Restart", "Exit");
+        ask.setEnabled(true);
     }
     
     public Globals getMyGlobals(){
@@ -118,16 +124,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         if (running) {
             // get the time :
             time = game.getTime();
-//            System.out.println(time);
-            if (time <= 0f || start) {
-                game.setEnabled(false);
-                inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
-                inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
-                inputManager.addListener(actionListener, "Restart", "Exit");
-                ask.setEnabled(true);
-                running = false;
-                start = false;
-            }
+//            System.out.println(time);            
         }
         
         if (game.isEnabled()){
@@ -284,10 +281,12 @@ class ClientPlayer extends Player{
     private final KeyTrigger DOWN = new KeyTrigger(KeyInput.KEY_S);
     private final KeyTrigger RIGHT = new KeyTrigger(KeyInput.KEY_Q);
     private final KeyTrigger LEFT = new KeyTrigger(KeyInput.KEY_D);
+    private final SimpleApplication myApp;
     
     public ClientPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, boolean isControl) {
         super(X_pos, Y_pos, app, NodeGame);
         this.keyTrigger = isControl;
+        myApp = app;
     }
     @Override
     protected void initialize(Application app) {
@@ -298,6 +297,17 @@ class ClientPlayer extends Player{
             app.getInputManager().addMapping("LEFT", this.LEFT);
             app.getInputManager().addMapping("RIGHT", this.RIGHT);
             app.getInputManager().addListener(analogListener, "UP", "DOWN", "LEFT","RIGHT");
+        }
+    }
+    
+    @Override
+    protected void onDisable() {
+        super.onDisable();
+        if (keyTrigger){
+            myApp.getInputManager().deleteMapping("UP");
+            myApp.getInputManager().deleteMapping("DOWN");
+            myApp.getInputManager().deleteMapping("LEFT");
+            myApp.getInputManager().deleteMapping("RIGHT"); 
         }
     }
     

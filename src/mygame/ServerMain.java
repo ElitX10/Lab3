@@ -135,6 +135,22 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     @Override
     public void connectionRemoved(Server server, HostedConnection client) {
         System.out.println("Server knows that client #" + client.getId() + " has left.");
+        if (!game.isEnabled()){
+            int index = getIndexOfPlayer(client.getId());
+            if (index < 10){
+                PlayerStore.remove(index);
+            }
+        }              
+    }
+    
+    // return the index in PlayerStore of the player corresponding to a host :
+    public int getIndexOfPlayer(int clientHost){
+        for (int i =0; i < PlayerStore.size(); i++){
+            if(PlayerStore.get(i).getHost() == clientHost){
+                return i;
+            }
+        }        
+        return 10;
     }
     
     public class ServerListener implements MessageListener<HostedConnection>{
@@ -153,6 +169,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                     public Object call() throws Exception {                        
                         // turn on the game :
                         ServerMain.this.game.setEnabled(true);
+                        // set id for players :
+                        ServerMain.this.setNewID();
                         // assigne position for each player : 
                         ServerMain.this.setRandomPosition();
                         // reset the array size : 
@@ -162,6 +180,11 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                         PlayerPosMessage initPos = new PlayerPosMessage(X_Player, Y_Player, Host_Player);
                         myServer.broadcast(initPos);
 
+                        // testing : 
+                        for (int i =0; i < PlayerStore.size(); i++){
+                            System.out.println("player : " + PlayerStore.get(i).id + " controlled by : " + PlayerStore.get(i).getHost());
+                        }
+                        
                         //send a message to start the game for all clients :
                         StartGameMessage turnGameOn = new StartGameMessage();
                         myServer.broadcast(turnGameOn);
@@ -172,6 +195,13 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                 
             }
         }        
+    }
+    
+    // set new id for all player :
+    private void setNewID(){
+        for (int i = 0; i < PlayerStore.size(); i++){
+            PlayerStore.get(i).setID(i + 1);
+        }
     }
     
     private void setRandomPosition(){
@@ -218,5 +248,9 @@ class ServerPlayer extends Player {
     
     public int getHost(){
         return this.HOST;
+    }
+    
+    public void setID(int newID){
+        this.id = newID;
     }
 }

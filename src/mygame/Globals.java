@@ -749,7 +749,7 @@ class PDisk extends Disk {
 //------------------------------------------------- PLAYER --------------------------------------------------------------------------------------------------------------------------------------------------------
 
 abstract class Player extends Disk { 
-    private int id;
+    protected int id;
     private final int SPEED_ACCELERATION = 60; 
     private static int playerNumber = 0;
     private SimpleApplication myApp;
