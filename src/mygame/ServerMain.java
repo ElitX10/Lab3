@@ -34,6 +34,9 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     // list containing all players :
     private ArrayList<ServerPlayer> PlayerStore = new ArrayList<ServerPlayer>();
     
+    // list containing the index (in PlayerStore) of players that leave during the game :
+    private final ArrayList<Integer> indexOfLeaver = new ArrayList<Integer>();
+    
     // posible position for player disk :
     private final float POS_PLAYER[][] = {{-Game.POSNEG_BETWEEN_COORD,Game.POSNEG_BETWEEN_COORD},
                                         {0,Game.POSNEG_BETWEEN_COORD},
@@ -111,6 +114,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                 EndGameMessage endMess = new EndGameMessage();
                 myServer.broadcast(endMess);
                 Player.resetPlayerNumber();
+                this.removeInGameLeaver();
             }
         }
     }
@@ -135,12 +139,28 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     @Override
     public void connectionRemoved(Server server, HostedConnection client) {
         System.out.println("Server knows that client #" + client.getId() + " has left.");
+        int index = getIndexOfPlayer(client.getId());
         if (!game.isEnabled()){
-            int index = getIndexOfPlayer(client.getId());
+            
             if (index < 10){
                 PlayerStore.remove(index);
             }
+        }else {
+            //check if the player was in the game (and that he is not a player that have been kiked)
+            if(index < 10){
+                indexOfLeaver.add(index);
+                // don't allow the leaver to win :
+                PlayerStore.get(index).setScore(-999);
+            }
         }              
+    }
+    
+    private void removeInGameLeaver(){
+        for (int i = 0; i < indexOfLeaver.size(); i++){
+            int j = indexOfLeaver.get(i);
+            PlayerStore.remove(j);
+        }
+        indexOfLeaver.clear();
     }
     
     // return the index in PlayerStore of the player corresponding to a host :
@@ -252,5 +272,5 @@ class ServerPlayer extends Player {
     
     public void setID(int newID){
         this.id = newID;
-    }
+    }    
 }

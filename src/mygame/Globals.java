@@ -960,4 +960,12 @@ abstract class Player extends Disk {
     void addToScore(int points) {
         this.POINT += points;
     }
+    
+    public void setScore(int newScore){
+        this.POINT = newScore;
+    }
+    
+    public int getScore(){
+        return this.POINT;
+    }
 }
