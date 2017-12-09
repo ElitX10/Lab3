@@ -44,7 +44,6 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     private Game game = new Game(this,NODE_GAME);
     private boolean running = true;
     private float time; 
-    private boolean start = true;
     
     // list containing all players :
     private ArrayList<ClientPlayer> PlayerStore = new ArrayList<ClientPlayer>();
@@ -212,8 +211,15 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                     public Object call() throws Exception {
                         ClientMain.this.game.setEnabled(false);
                         ClientMain.this.ask.setEnabled(true);
+                        // disable all players :
+                        for(int i = 0 ; i < PlayerStore.size();i++){
+                            PlayerStore.get(i).setEnabled(false);
+                        }
                         PlayerStore.clear();
                         Player.resetPlayerNumber();
+                        inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
+                        inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
+                        inputManager.addListener(actionListener, "Restart", "Exit");
                         return true;
                     }
                 });
