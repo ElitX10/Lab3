@@ -64,6 +64,9 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     private final int sendTimeDelay = 3;
     private float timeDelay = 0;
     
+    private float sendGlobalUpdateDelay = 0.01f;
+    private float GlobalUpdateDelay = 0;
+    
     public ServerMain(){
         game.setEnabled(false);
         stateManager.attach(game);
@@ -123,13 +126,16 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                 myServer.broadcast(endMess);
                 Player.resetPlayerNumber();
                 this.removeInGameLeaver();
+            }            
+            GlobalUpdateDelay += tpf;           
+            if (GlobalUpdateDelay >= sendGlobalUpdateDelay){
+                DiskPositions();
+                DiskPosMessage diskPosUpdate = new DiskPosMessage(X_Disks,Y_Disks,XSpeed_Disks,
+                                                                  YSpeed_Disks);
+                myServer.broadcast(diskPosUpdate);
+                GlobalUpdateDelay = 0;
             }
             
-            // TODO : try send less message :
-            DiskPositions();
-            DiskPosMessage diskPosUpdate = new DiskPosMessage(X_Disks,Y_Disks,XSpeed_Disks,
-                                                              YSpeed_Disks);
-            myServer.broadcast(diskPosUpdate);
         }
     }
 
@@ -204,6 +210,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                     public Object call() throws Exception {                        
                         // turn on the game :
                         ServerMain.this.game.setEnabled(true);
+                        // add players to the list of disks in game :
+                        game.addServerPlayerToList(PlayerStore);
                         // set id for players :
                         ServerMain.this.setNewID();
                         // assigne position for each player : 
@@ -313,6 +321,9 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         YSpeed_Disks = Y_Speed;
     }
     
+    public Server getMyServer(){
+        return myServer;
+    }
 }
 
 //-------------------------------------------------SERVER_PLAYER--------------------------------------------------------------------------------------------------------------------------------------------------------

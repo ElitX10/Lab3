@@ -190,6 +190,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                         ClientMain.this.running = true;
                         ClientMain.this.inputManager.deleteMapping("Restart");
                         ClientMain.this.inputManager.deleteMapping("Exit");
+                        ClientMain.this.game.addClientPlayerToList(ClientMain.this.PlayerStore);
                         return true;
                     }
                 });
@@ -250,8 +251,6 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                                 game.getDiskStore().get(i).setYPos(Y_Pos[i]);
                                 game.getDiskStore().get(i).setXSpeed(X_Speed[i]);                                
                                 game.getDiskStore().get(i).setYSpeed(Y_Speed[i]);
-                            }else{
-
                             }
                         }
                         return true;

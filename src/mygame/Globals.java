@@ -14,6 +14,7 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
+import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializable;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.renderer.queue.RenderQueue;
@@ -354,11 +355,14 @@ class Game extends BaseAppState {
     @Override
     public void update(float tpf) {  
         // collision between disks :
-        for(int i = 0; i < diskStore.size(); i++){
-            for(int other = i + 1; other < diskStore.size(); other++){
-                diskStore.get(i).diskCollision(diskStore.get(other), tpf);
-            }            
+        if(myApp instanceof ServerMain){
+            for(int i = 0; i < diskStore.size(); i++){
+                for(int other = i + 1; other < diskStore.size(); other++){
+                    diskStore.get(i).diskCollision(diskStore.get(other), tpf);
+                }            
+            }    
         }
+        
         
         // time update :
         TIME -= tpf;
@@ -372,7 +376,19 @@ class Game extends BaseAppState {
 //            text += "\nPlayer " + diskStore.get(i).getID() + " : " + diskStore.get(i).POINT;
 //        }
 //        timeAndScore.setText(text);
-    }    
+    }
+    
+    public void addClientPlayerToList(ArrayList<ClientPlayer> PlayerList){
+        for(int i = 0; i < PlayerList.size(); i++){
+            this.diskStore.add(PlayerList.get(i));
+        }
+    }
+    
+    public void addServerPlayerToList(ArrayList<ServerPlayer> PlayerList){
+        for(int i = 0; i < PlayerList.size(); i++){
+            this.diskStore.add(PlayerList.get(i));
+        }
+    }
     
     public float getTime(){
         return TIME;
