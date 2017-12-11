@@ -42,6 +42,7 @@ public class Globals {
         Serializer.registerClass(StartGameMessage.class);
         Serializer.registerClass(PlayerPosMessage.class);
         Serializer.registerClass(EndGameMessage.class);
+        Serializer.registerClass(DiskPosMessage.class);
     }   
     
     // abstract message :
@@ -109,6 +110,48 @@ public class Globals {
             
         }
     }
+    
+@Serializable
+    public static class DiskPosMessage extends MyAbstractMessage{
+        float X_COORD[];
+        float Y_COORD[];
+        float X_SPEED[];
+        float Y_SPEED[];
+        int hosts[];
+        
+        public DiskPosMessage(){
+             
+        }
+         
+        public DiskPosMessage(float x[], float y[], float xspeed[], float yspeed[]){
+            X_COORD = x;
+            Y_COORD = y;
+            X_SPEED = xspeed;
+            Y_SPEED = yspeed;
+
+ //            this.hosts = hosts;
+        }
+         
+ //        public int[] getHosts(){
+ //            return hosts;
+ //        }
+         
+        public float[] getX(){
+            return X_COORD;
+        }
+
+        public float[] getY(){
+            return Y_COORD;
+        }
+
+        public float[] getX_SPEED(){
+            return X_SPEED;
+        }
+
+        public float[] getY_SPEED(){
+            return Y_SPEED;
+        }
+     }    
 }
 
 //-------------------------------------------------GAME--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,10 +321,10 @@ class Game extends BaseAppState {
         needCleaning = true;
         
         //enable all disk :
-//        for(Disk d: diskStore){
-//            d.setEnabled(false);
-//        }
-//        diskStore.clear();
+        for(Disk d: diskStore){
+            d.setEnabled(false);
+        }
+        diskStore.clear();
     } 
     
     @Override
@@ -587,6 +630,30 @@ abstract class Disk extends BaseAppState {
     
     public void setYPos(float newY){
         this.Y_POS = newY;
+    }
+    
+    public void setXSpeed(float newXSpeed){
+        this.X_SPEED = newXSpeed;
+    }
+
+    public void setYSpeed(float newYSpeed){
+        this.Y_SPEED = newYSpeed;
+    }
+
+    public float getXPos(){
+        return X_POS;
+    }
+
+    public float getYPos(){
+        return Y_POS;
+    }
+
+    public float getXSpeed(){
+        return X_SPEED;
+    }
+
+    public float getYSpeed(){
+        return Y_SPEED;
     }
     
     // functions specific for each kind of disk :
