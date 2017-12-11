@@ -43,6 +43,7 @@ public class Globals {
         Serializer.registerClass(PlayerPosMessage.class);
         Serializer.registerClass(EndGameMessage.class);
         Serializer.registerClass(DiskPosMessage.class);
+        Serializer.registerClass(InputMessage.class);
     }   
     
     // abstract message :
@@ -111,7 +112,7 @@ public class Globals {
         }
     }
     
-@Serializable
+    @Serializable
     public static class DiskPosMessage extends MyAbstractMessage{
         float X_COORD[];
         float Y_COORD[];
@@ -151,7 +152,30 @@ public class Globals {
         public float[] getY_SPEED(){
             return Y_SPEED;
         }
-     }    
+    } 
+    
+    @Serializable
+    public static class InputMessage extends MyAbstractMessage{
+        private float X_Input_Time;
+        private float Y_Input_Time;
+        
+        public InputMessage(){
+            
+        }
+        
+        public InputMessage(float X, float Y){
+            this.X_Input_Time = X;
+            this.Y_Input_Time = Y;
+        }
+        
+        public float getXTimer(){
+            return X_Input_Time;
+        }
+        
+        public float getYTimer(){
+            return Y_Input_Time;
+        }
+    }
 }
 
 //-------------------------------------------------GAME--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -492,13 +516,13 @@ abstract class Disk extends BaseAppState {
         // update the position :
         this.X_POS += X_SPEED * tpf;
         this.Y_POS += Y_SPEED * tpf;   
-         
+        
         // move to the new position :
         node_disk.setLocalTranslation(X_POS, Y_POS , Z_POS);
         
         //simulate friction :
-            this.X_SPEED -= this.X_SPEED * FRICTION * tpf;
-            this.Y_SPEED -= this.Y_SPEED * FRICTION * tpf;  
+        this.X_SPEED -= this.X_SPEED * FRICTION * tpf;
+        this.Y_SPEED -= this.Y_SPEED * FRICTION * tpf;  
         
         // check if there is a collision with the frame :    
         frameCollision();
@@ -817,7 +841,7 @@ class PDisk extends Disk {
 
 abstract class Player extends Disk { 
     protected int id;
-    private final int SPEED_ACCELERATION = 60; 
+    protected final int SPEED_ACCELERATION = 60; 
     private static int playerNumber = 0;
     private SimpleApplication myApp;
       

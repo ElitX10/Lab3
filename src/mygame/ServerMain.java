@@ -1,5 +1,6 @@
 package mygame;
 
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -89,7 +90,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         // add message listenter : 
         myServer.addMessageListener(new ServerListener(),
                                     TimeMessage.class,
-                                    StartGameMessage.class);
+                                    StartGameMessage.class,
+                                    InputMessage.class);
     }
     
     // to ensure to close the net connection cleanly :
@@ -189,6 +191,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
 
         @Override
         public void messageReceived(HostedConnection source, Message m) {
+            final HostedConnection mySource = source;
             if (m instanceof TimeMessage){
 //                System.out.println("ask for time");
 //                TimeMessage giveTime = new TimeMessage(38);
@@ -205,6 +208,11 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                         ServerMain.this.setNewID();
                         // assigne position for each player : 
                         ServerMain.this.setRandomPosition();
+                        // enable all players :
+                        for(int i =0; i < PlayerStore.size(); i++){
+                            PlayerStore.get(i).setEnabled(true);
+                            stateManager.attach(PlayerStore.get(i));
+                        }
                         // reset the array size : 
                         ServerMain.this.TAB_POS_PLAYER_LENGTH = 8;
                         // send player informations :
@@ -222,9 +230,18 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                         myServer.broadcast(turnGameOn);
                         return true;
                     }
+                });                 
+            }else if(m instanceof InputMessage){
+                final InputMessage input = (InputMessage) m;
+                Future result = ServerMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        int index = getIndexOfPlayer(mySource.getId());
+                        PlayerStore.get(index).newInput(input.getXTimer(), input.getYTimer());
+                        System.out.println("player : " + PlayerStore.get(index).id + " X : " + PlayerStore.get(index).getXPos() + " Y : " + PlayerStore.get(index).getYPos());
+                        return true;
+                    }
                 });
-                
-                
             }
         }        
     }
@@ -306,7 +323,26 @@ class ServerPlayer extends Player {
     public ServerPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, int host) {
         super(X_pos, Y_pos, app, NodeGame);
         this.HOST = host;
-    }  
+    } 
+    @Override
+    protected void initialize(Application app) {
+        super.initialize(app);
+    }
+    
+    @Override
+    public void update(float tpf) {
+        super.update(tpf);
+    }
+    
+    @Override
+    protected void onDisable() {
+        super.onDisable();
+    }
+    
+    @Override
+    protected void onEnable() {
+        super.onEnable();
+    }
     
     public int getHost(){
         return this.HOST;
@@ -314,5 +350,11 @@ class ServerPlayer extends Player {
     
     public void setID(int newID){
         this.id = newID;
-    }    
+    } 
+    
+    public void newInput(float X, float Y){
+        X_SPEED += SPEED_ACCELERATION * X;
+        Y_SPEED += SPEED_ACCELERATION * Y;
+        //System.out.println("X : " + X_SPEED + " Y : " + Y_SPEED);
+    }
 }

@@ -108,7 +108,11 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     
     public Node getGameNode(){
         return NODE_GAME;
-    }    
+    } 
+    
+    public Client getMyClient(){
+        return myClient;
+    }
     
     // to ensure to close the net connection cleanly :
     @Override
@@ -201,9 +205,9 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                         for (int i = 0; i < X_Pos.length; i ++){
                             ClientPlayer player;                            
                             if (Hosts[i] == myHost){                                
-                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, true);
+                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, true, myClient);
                             }else{
-                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, false);
+                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, false, myClient);
                             }
                             player.setEnabled(true);
                             ClientMain.this.getStateManager().attach(player); 
@@ -315,14 +319,16 @@ class ClientPlayer extends Player{
     private boolean keyTrigger;
     private final KeyTrigger UP = new KeyTrigger(KeyInput.KEY_Z);
     private final KeyTrigger DOWN = new KeyTrigger(KeyInput.KEY_S);
-    private final KeyTrigger RIGHT = new KeyTrigger(KeyInput.KEY_Q);
-    private final KeyTrigger LEFT = new KeyTrigger(KeyInput.KEY_D);
+    private final KeyTrigger RIGHT = new KeyTrigger(KeyInput.KEY_D);
+    private final KeyTrigger LEFT = new KeyTrigger(KeyInput.KEY_Q);
     private final SimpleApplication myApp;
+    private final Client myClient;
     
-    public ClientPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, boolean isControl) {
+    public ClientPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, boolean isControl, Client Client) {
         super(X_pos, Y_pos, app, NodeGame);
         this.keyTrigger = isControl;
         myApp = app;
+        myClient = Client;
     }
     @Override
     protected void initialize(Application app) {
@@ -337,6 +343,16 @@ class ClientPlayer extends Player{
     }
     
     @Override
+    public void update(float tpf) {
+        super.update(tpf);
+    }
+    
+    @Override
+    protected void onEnable() {
+        super.onEnable();
+    }
+    
+    @Override
     protected void onDisable() {
         super.onDisable();
         if (keyTrigger){
@@ -348,23 +364,49 @@ class ClientPlayer extends Player{
     }
     
     private AnalogListener analogListener = new AnalogListener() {
+        float timePressed = 0;
+        final float delay = 0.15f;
+        float X_Pressed = 0;
+        float Y_Pressed = 0;
+        
         @Override
         public void onAnalog(String name, float value, float tpf) {
             if (isEnabled()){
+                timePressed += tpf;
                 // add velocity when input are pressed :
                 if (name.equals("UP")){
-//                    Y_SPEED += SPEED_ACCELERATION * tpf;
+                    Y_SPEED += SPEED_ACCELERATION * tpf;
+                    Y_Pressed += tpf;
                 }
                 if (name.equals("DOWN")){
-//                    Y_SPEED -= SPEED_ACCELERATION * tpf; 
+                    Y_SPEED -= SPEED_ACCELERATION * tpf; 
+                    Y_Pressed -= tpf;
                 }
                 if (name.equals("LEFT")){
-//                    X_SPEED -= SPEED_ACCELERATION * tpf;
+                    X_SPEED -= SPEED_ACCELERATION * tpf;
+                    X_Pressed -= tpf;
                 }
                 if (name.equals("RIGHT")){
-//                    X_SPEED += SPEED_ACCELERATION * tpf;
+                    X_SPEED += SPEED_ACCELERATION * tpf;
+                    X_Pressed += tpf;
                 }
-            }            
+            }
+            sendInput();
+        }
+        
+        private void sendInput(){
+            if(timePressed >= delay){
+                // send message :
+                InputMessage input = new InputMessage(X_Pressed, Y_Pressed);
+                myClient.send(input);
+                // reset values :
+                timePressed = 0;
+                X_Pressed = 0;
+                Y_Pressed = 0;
+            }
         }
     };
+    
+    
+    
 }
