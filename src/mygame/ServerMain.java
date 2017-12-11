@@ -51,6 +51,12 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     private float Y_Player[];
     private int Host_Player[];
     
+    //array with all disks' position :
+    private float X_Disks[];
+    private float Y_Disks[];
+    private float XSpeed_Disks[];
+    private float YSpeed_Disks[];
+    
     private final int sendTimeDelay = 3;
     private float timeDelay = 0;
     
@@ -112,6 +118,12 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                 myServer.broadcast(endMess);
                 Player.resetPlayerNumber();
             }
+            
+            DiskPositions();
+            DiskPosMessage diskPosUpdate = new DiskPosMessage(X_Disks,Y_Disks,XSpeed_Disks,
+                                                                YSpeed_Disks);
+            myServer.broadcast(diskPosUpdate);
+            
         }
     }
 
@@ -233,6 +245,35 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         X_Player = X_Pos;
         Y_Player = Y_Pos;
         Host_Player = Hosts;
+    }
+    
+    private void DiskPositions(){
+        int TotalDisksNum = game.getDiskStore().size() + PlayerStore.size();
+        float[] X_Pos = new float[TotalDisksNum];
+        float[] Y_Pos = new float[TotalDisksNum];
+        float[] X_Speed = new float[TotalDisksNum];
+        float[] Y_Speed = new float[TotalDisksNum];
+        
+        int playerIndex = 0;
+        
+        for (int i = 0; i < TotalDisksNum; i++){
+            if(i < game.getDiskStore().size()){
+                X_Pos[i] = game.getDiskStore().get(i).getXPos();
+                Y_Pos[i] = game.getDiskStore().get(i).getYPos();
+                X_Speed[i] = game.getDiskStore().get(i).getXSpeed();
+                Y_Speed[i] = game.getDiskStore().get(i).getYSpeed();
+            } else {
+                X_Pos[i] = PlayerStore.get(playerIndex).getXPos();
+                Y_Pos[i] = PlayerStore.get(playerIndex).getYPos();
+                X_Speed[i] = PlayerStore.get(playerIndex).getXSpeed();
+                Y_Speed[i] = PlayerStore.get(playerIndex).getYSpeed();
+            }
+        }
+        
+        X_Disks = X_Pos;
+        Y_Disks = Y_Pos;
+        XSpeed_Disks = X_Speed;
+        YSpeed_Disks = Y_Speed;
     }
 }
 

@@ -67,7 +67,10 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         try {
             myClient = Network.connectToServer(Globals.NAME, Globals.VERSION, Globals.DEFAULT_SERVER, Globals.DEFAULT_PORT);
             myClient.start();
-        } catch (IOException ex) { }
+        } catch (IOException ex) {
+            this.destroy();
+            this.stop();
+        }
         
         // add client listener :
         myClient.addClientStateListener(this);
@@ -77,10 +80,14 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                                     TimeMessage.class,
                                     StartGameMessage.class,
                                     PlayerPosMessage.class,
-                                    EndGameMessage.class);
+                                    EndGameMessage.class,
+                                    DiskPosMessage.class);
         
         // unable camera mvt with mouse : 
-        flyCam.setEnabled(false); 
+        flyCam.setEnabled(false);
+        
+        // outside the window or we give the focus to another window
+        setPauseOnLostFocus(false);
         
         //node containing all the other new node on the game :
         rootNode.attachChild(NODE_GAME);
@@ -93,6 +100,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
         inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
         inputManager.addListener(actionListener, "Restart", "Exit");
         ask.setEnabled(true);
+        
+        
     }
     
     public Globals getMyGlobals(){
@@ -142,7 +151,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
     }
 
     @Override
-    public void clientConnected(Client client) {
+    public void clientConnected(Client client) { 
         System.out.println("Client #" + client.getId() + " is ready.");
 //        TimeMessage timeMess = new TimeMessage();
 //        myClient.send(timeMess);
@@ -220,6 +229,31 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                         inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
                         inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
                         inputManager.addListener(actionListener, "Restart", "Exit");
+                        return true;
+                    }
+                });
+            }else if(m instanceof DiskPosMessage){
+                final DiskPosMessage DiskPos = (DiskPosMessage) m;
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        float[] X_Pos = DiskPos.getX();
+                        float[] Y_Pos = DiskPos.getY();
+                        float[] X_Speed = DiskPos.getX_SPEED();
+                        float[] Y_Speed = DiskPos.getY_SPEED();
+                        
+                        for (int i = 0; i < X_Pos.length; i ++){                    
+                            if (i < game.getDiskStore().size()){                                
+                                game.getDiskStore().get(i).setXPos(X_Pos[i]);
+                                game.getDiskStore().get(i).setYPos(Y_Pos[i]);
+                                game.getDiskStore().get(i).setXSpeed(X_Speed[i]);                                
+                                game.getDiskStore().get(i).setYSpeed(Y_Speed[i]);
+                                
+                            }else{
+                                
+                            }
+  
+                        }
                         return true;
                     }
                 });
