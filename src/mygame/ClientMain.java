@@ -81,7 +81,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                                     StartGameMessage.class,
                                     PlayerPosMessage.class,
                                     EndGameMessage.class,
-                                    DiskPosMessage.class);
+                                    DiskPosMessage.class,
+                                    PositivDiskUpdateMessage.class);
         
         // unable camera mvt with mouse : 
         flyCam.setEnabled(false); 
@@ -212,7 +213,7 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                             }
                             player.setEnabled(true);
                             ClientMain.this.getStateManager().attach(player); 
-                            PlayerStore.add(player);
+                            ClientMain.this.PlayerStore.add(player);
                         }
                         return true;
                     }
@@ -227,11 +228,11 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                         for(int i = 0 ; i < PlayerStore.size();i++){
                             PlayerStore.get(i).setEnabled(false);
                         }
-                        PlayerStore.clear();
+                        ClientMain.this.PlayerStore.clear();
                         Player.resetPlayerNumber();
-                        inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
-                        inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
-                        inputManager.addListener(actionListener, "Restart", "Exit");
+                        ClientMain.this.inputManager.addMapping("Restart", new KeyTrigger(KeyInput.KEY_P)); // enable calls
+                        ClientMain.this.inputManager.addMapping("Exit", new KeyTrigger(KeyInput.KEY_E));
+                        ClientMain.this.inputManager.addListener(actionListener, "Restart", "Exit");
                         return true;
                     }
                 });
@@ -247,12 +248,22 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
 
                         for (int i = 0; i < X_Pos.length; i ++){                    
                             if (i < game.getDiskStore().size()){                                
-                                game.getDiskStore().get(i).setXPos(X_Pos[i]);
-                                game.getDiskStore().get(i).setYPos(Y_Pos[i]);
-                                game.getDiskStore().get(i).setXSpeed(X_Speed[i]);                                
-                                game.getDiskStore().get(i).setYSpeed(Y_Speed[i]);
+                                ClientMain.this.game.getDiskStore().get(i).setXPos(X_Pos[i]);
+                                ClientMain.this.game.getDiskStore().get(i).setYPos(Y_Pos[i]);
+                                ClientMain.this.game.getDiskStore().get(i).setXSpeed(X_Speed[i]);                                
+                                ClientMain.this.game.getDiskStore().get(i).setYSpeed(Y_Speed[i]);
                             }
                         }
+                        return true;
+                    }
+                });
+            }else if(m instanceof PositivDiskUpdateMessage){
+                final PositivDiskUpdateMessage diskUpdateMess = (PositivDiskUpdateMessage) m;
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        PDisk diskToUpdate = (PDisk) ClientMain.this.game.getDiskStore().get(diskUpdateMess.getIndex());
+                        diskToUpdate.updateDisk(diskUpdateMess.getPoint());
                         return true;
                     }
                 });

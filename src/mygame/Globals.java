@@ -45,6 +45,7 @@ public class Globals {
         Serializer.registerClass(EndGameMessage.class);
         Serializer.registerClass(DiskPosMessage.class);
         Serializer.registerClass(InputMessage.class);
+        Serializer.registerClass(PositivDiskUpdateMessage.class);
     }   
     
     // abstract message :
@@ -114,12 +115,35 @@ public class Globals {
     }
     
     @Serializable
+    public static class PositivDiskUpdateMessage extends MyAbstractMessage{
+        private int index;
+        private int point;
+        
+        public PositivDiskUpdateMessage(){
+            
+        }
+        
+        public PositivDiskUpdateMessage(int diskIndex, int diskPoint){
+            this.index = diskIndex;
+            this.point = diskPoint;
+        } 
+        
+        public int getIndex(){
+            return index;
+        }
+        
+        public int getPoint(){
+            return point;
+        }
+    }
+    
+    @Serializable
     public static class DiskPosMessage extends MyAbstractMessage{
-        float X_COORD[];
-        float Y_COORD[];
-        float X_SPEED[];
-        float Y_SPEED[];
-        int hosts[];
+        private float X_COORD[];
+        private float Y_COORD[];
+        private float X_SPEED[];
+        private float Y_SPEED[];
+        private int hosts[];
         
         public DiskPosMessage(){
              
@@ -281,6 +305,7 @@ class Game extends BaseAppState {
         
         // create all neg and pos disk :
         boolean isNeg = true;
+        int index = 0;
         for(int i=0; i<5 ;i++){
             for (int j=0; j<5 ;j++){
                 if(!((i>0 && i<4)&&(j>0 && j<4))){
@@ -290,11 +315,12 @@ class Game extends BaseAppState {
                         myApp.getStateManager().attach(disk);
                         diskStore.add(disk);
                     }else{
-                        PDisk disk = new PDisk(POS_TAB[i], POS_TAB[j], myApp, NODE_GAME); 
+                        PDisk disk = new PDisk(POS_TAB[i], POS_TAB[j], myApp, NODE_GAME, index); 
                         disk.setEnabled(true); 
                         myApp.getStateManager().attach(disk);
                         diskStore.add(disk);
                     }
+                    index += 1;
                 }
                 isNeg = !isNeg;                
             }     
@@ -767,7 +793,9 @@ class PDisk extends Disk {
     
     private final Application myApp;
     
-    PDisk(float X_pos, float Y_pos, SimpleApplication app, Node gameNode){
+    private int indexInList;
+    
+    PDisk(float X_pos, float Y_pos, SimpleApplication app, Node gameNode, int index){
         super("P", ColorRGBA.Green, Game.NEGDISK_R, Game.FRAME_THICKNESS, X_pos, Y_pos, app, gameNode);
         if (app instanceof ServerMain){
             this.X_SPEED = -INIT_SPEED_VALUE + (float)Math.random()*2*INIT_SPEED_VALUE;
@@ -775,6 +803,7 @@ class PDisk extends Disk {
         }
         this.POINT = 5;
         myApp = app;
+        indexInList = index;
     }
     
     
@@ -815,17 +844,17 @@ class PDisk extends Disk {
         super.update(tpf);
     }
     
-    public void updateDisk(){
+    public void updateDisk(int point){
         // if there is still available point on the disk :
         if(this.POINT > 0 ){
             // decrease point for the next collision :
-            this.POINT -= 1;
+            this.POINT = point;
             
             // change the color :
-            super.mat_disk.setColor("Color", colorTab[this.POINT]); 
+            super.mat_disk.setColor("Color", colorTab[point]); 
             
             // delete one marker :
-            super.node_disk.detachChild(pointMarker[this.POINT]);  
+            super.node_disk.detachChild(pointMarker[point]);  
         }
     }
 
@@ -835,7 +864,15 @@ class PDisk extends Disk {
         
         // if it collide with a player disk then update the disk :
         if(d.TYPE.equals("X")){
-            this.updateDisk();
+            this.updateDisk(this.POINT - 1);
+        }
+        
+        // server send update to the clients :
+        if(myApp instanceof ServerMain){
+            ServerMain myServerApp = (ServerMain) myApp;
+            Server myServer = myServerApp.getMyServer();
+            Globals.PositivDiskUpdateMessage updatePosDisk = new Globals.PositivDiskUpdateMessage(this.indexInList, this.POINT);
+            myServer.broadcast(updatePosDisk);
         }
         
         // return the reward :
