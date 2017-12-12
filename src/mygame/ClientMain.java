@@ -202,20 +202,27 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                 Future result = ClientMain.this.enqueue(new Callable() {
                     @Override
                     public Object call() throws Exception {
-                        float[] X_Pos = playerPos.getX();
-                        float[] Y_Pos = playerPos.getY();
-                        int[] Hosts = playerPos.getHosts();
-                        for (int i = 0; i < X_Pos.length; i ++){
-                            ClientPlayer player;                            
-                            if (Hosts[i] == myHost){                                
-                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, true, myClient);
-                            }else{
-                                player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, false, myClient);
+                        if (PlayerStore.isEmpty()){
+                            float[] X_Pos = playerPos.getX();
+                            float[] Y_Pos = playerPos.getY();
+                            int[] Hosts = playerPos.getHosts();
+                            for (int i = 0; i < X_Pos.length; i ++){
+                                ClientPlayer player;                            
+                                if (Hosts[i] == myHost){                                
+                                    player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, true, myClient);
+                                }else{
+                                    player = new ClientPlayer(X_Pos[i], Y_Pos[i], ClientMain.this, NODE_GAME, false, myClient);
+                                }
+                                player.setEnabled(true);
+                                ClientMain.this.getStateManager().attach(player); 
+                                ClientMain.this.PlayerStore.add(player);
                             }
-                            player.setEnabled(true);
-                            ClientMain.this.getStateManager().attach(player); 
-                            ClientMain.this.PlayerStore.add(player);
+
+//                            // send ack :
+//                            PlayerPosMessage ack = new PlayerPosMessage();
+//                            ClientMain.this.myClient.send(ack);
                         }
+                        
                         return true;
                     }
                 });

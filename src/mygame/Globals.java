@@ -234,7 +234,7 @@ class Game extends BaseAppState {
     private final int NUMBER_OF_PLAYER = 3;
     
     // time informations : 
-    private float TIME = 30f;
+    private float TIME = 10f;
     DecimalFormat df = new DecimalFormat("0.0 s"); //time format
     private BitmapText timeAndScore;
     
@@ -319,7 +319,7 @@ class Game extends BaseAppState {
             
             //reset variables :
 //            TAB_POS_PLAYER_LENGTH = 8;
-            TIME = 30f;
+            TIME = 10f;
             needCleaning = false;            
         }
         
@@ -896,7 +896,7 @@ class PDisk extends Disk {
                 Server myServer = myServerApp.getMyServer();
                 Globals.PositivDiskUpdateMessage updatePosDisk = new Globals.PositivDiskUpdateMessage(this.indexInList, this.POINT);
                 myServer.broadcast(updatePosDisk);
-                System.out.println("send PositivDiskUpdateMessage");
+//                System.out.println("send PositivDiskUpdateMessage");
             }
         }
         // return the reward :

@@ -5,6 +5,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.network.ConnectionListener;
+import com.jme3.network.Filters;
 import com.jme3.network.HostedConnection;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
@@ -18,6 +19,7 @@ import com.jme3.scene.shape.Box;
 import com.jme3.system.JmeContext;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import mygame.Globals.*;
@@ -64,8 +66,11 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     private final int sendTimeDelay = 3;
     private float timeDelay = 0;
     
-    private float sendGlobalUpdateDelay = 0.01f;
+    private final float sendGlobalUpdateDelay = 0.01f;
     private float GlobalUpdateDelay = 0;
+    
+    private final int sendScoreAndPositivStateDelay = 1;
+    private float ScoreAndPositivStateDelay = 0;
     
     public ServerMain(){
         game.setEnabled(false);
@@ -94,7 +99,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         myServer.addMessageListener(new ServerListener(),
                                     TimeMessage.class,
                                     StartGameMessage.class,
-                                    InputMessage.class);
+                                    InputMessage.class/*,
+        PlayerPosMessage.class*/);
     }
     
     // to ensure to close the net connection cleanly :
@@ -160,6 +166,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     public void connectionRemoved(Server server, HostedConnection client) {
         System.out.println("Server knows that client #" + client.getId() + " has left.");
         int index = getIndexOfPlayer(client.getId());
+        System.out.println("index in list : "+index);
         if (!game.isEnabled()){
             
             if (index < 10){
@@ -169,6 +176,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
             //check if the player was in the game (and that he is not a player that have been kiked)
             if(index < 10){
                 indexOfLeaver.add(index);
+                Collections.sort(indexOfLeaver);
                 // don't allow the leaver to win :
                 PlayerStore.get(index).setScore(-999);
             }
@@ -176,8 +184,10 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     }
     
     private void removeInGameLeaver(){
-        for (int i = 0; i < indexOfLeaver.size(); i++){
+        System.out.println("size : " + indexOfLeaver.size());
+        for (int i = indexOfLeaver.size() - 1; i >= 0; i--){
             int j = indexOfLeaver.get(i);
+            System.out.println("j : " + j);
             PlayerStore.remove(j);
         }
         indexOfLeaver.clear();
@@ -196,6 +206,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     private void resetPlayerScore() {
         for (int i =0; i < PlayerStore.size(); i++){
             PlayerStore.get(i).setScore(0);
+//            PlayerStore.get(i).resetState();
         }
     }
     
@@ -236,14 +247,15 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                         PlayerPosMessage initPos = new PlayerPosMessage(X_Player, Y_Player, Host_Player);
                         myServer.broadcast(initPos);
 
-                        // testing : 
-                        for (int i =0; i < PlayerStore.size(); i++){
-                            System.out.println("player : " + PlayerStore.get(i).id + " controlled by : " + PlayerStore.get(i).getHost());
-                        }
-                        
+//                        // testing : 
+//                        for (int i =0; i < PlayerStore.size(); i++){
+//                            System.out.println("player : " + PlayerStore.get(i).id + " controlled by : " + PlayerStore.get(i).getHost());
+//                        }  
                         //send a message to start the game for all clients :
                         StartGameMessage turnGameOn = new StartGameMessage();
                         myServer.broadcast(turnGameOn);
+                        
+//                        ServerMain.this.checkInitialSetUp(initPos);
                         return true;
                     }
                 });                 
@@ -254,13 +266,45 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                     public Object call() throws Exception {
                         int index = getIndexOfPlayer(mySource.getId());
                         PlayerStore.get(index).newInput(input.getXTimer(), input.getYTimer());
-//                        System.out.println("player : " + PlayerStore.get(index).id + " X : " + PlayerStore.get(index).getXPos() + " Y : " + PlayerStore.get(index).getYPos());
+//                        System.out.println("player : " + PlayerStore.get(index).id + " X : " + PlayerStore.get(index).getXPos() + " Y : " + PlayerStore.get(index).getYPos());                        
                         return true;
                     }
                 });
-            }
+            }//else if(m instanceof PlayerPosMessage){
+//                Future result = ServerMain.this.enqueue(new Callable() {
+//                    @Override
+//                    public Object call() throws Exception {
+//                        // server know that the client is ready
+//                        PlayerStore.get(getIndexOfPlayer(mySource.getId())).playerIsReady();                        
+//                        return true;
+//                    }
+//                });
+//            }
         }        
     }
+    
+//    private void checkInitialSetUp(PlayerPosMessage mess){
+//        final PlayerPosMessage reSendMess = mess;
+//        try {
+//            Thread.sleep(40);
+//        }catch(InterruptedException ex){
+//            Thread.currentThread().interrupt();
+//        }
+//        Future result = ServerMain.this.enqueue(new Callable() {
+//            @Override
+//            public Object call() throws Exception {                
+//                for (int i =0; i < PlayerStore.size(); i++){
+//                    if (!PlayerStore.get(i).getState()){
+//                        myServer.broadcast(Filters.in(myServer.getConnection(PlayerStore.get(i).getHost())) ,reSendMess);
+//                        checkInitialSetUp(reSendMess);
+//                        System.out.println("mess resend");
+//                    }                    
+//                }
+//
+//                return true;
+//            }
+//        });
+//    }
     
     // set new id for all player :
     private void setNewID(){
@@ -338,6 +382,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
 
 class ServerPlayer extends Player {
     private final int HOST;
+//    private boolean isReady = false;
     
     public ServerPlayer(float X_pos, float Y_pos, SimpleApplication app, Node NodeGame, int host) {
         super(X_pos, Y_pos, app, NodeGame);
@@ -367,6 +412,15 @@ class ServerPlayer extends Player {
         return this.HOST;
     }
     
+//    public void playerIsReady(){
+//        isReady = true;
+////        System.out.println("player " + this.id + " is ready !");
+//    }
+//    
+//    public void resetState(){
+//        isReady = false;
+//    }
+    
     public void setID(int newID){
         this.id = newID;
     } 
@@ -376,4 +430,8 @@ class ServerPlayer extends Player {
         Y_SPEED += SPEED_ACCELERATION * Y;
         //System.out.println("X : " + X_SPEED + " Y : " + Y_SPEED);
     }
+
+//    boolean getState() {
+//        return isReady;
+//    }
 }
