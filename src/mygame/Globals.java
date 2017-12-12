@@ -46,6 +46,7 @@ public class Globals {
         Serializer.registerClass(DiskPosMessage.class);
         Serializer.registerClass(InputMessage.class);
         Serializer.registerClass(PositivDiskUpdateMessage.class);
+        Serializer.registerClass(ScoreMessage.class);
     }   
     
     // abstract message :
@@ -76,7 +77,30 @@ public class Globals {
             
         }
     }
-     
+    
+    @Serializable
+    public static class ScoreMessage extends MyAbstractMessage{
+        private int point;
+        private int id;
+        
+        public ScoreMessage(){
+            
+        }
+        
+        public ScoreMessage(int score, int playerId){
+            this.point = score;
+            this.id = playerId;
+        }
+        
+        public int getPoint(){
+            return point;
+        }
+        
+        public int getId(){
+            return id;
+        }
+    }
+    
     @Serializable
     public static class PlayerPosMessage extends MyAbstractMessage{
         float X_COORD[];
@@ -865,16 +889,16 @@ class PDisk extends Disk {
         // if it collide with a player disk then update the disk :
         if(d.TYPE.equals("X")){
             this.updateDisk(this.POINT - 1);
-        }
         
-        // server send update to the clients :
-        if(myApp instanceof ServerMain){
-            ServerMain myServerApp = (ServerMain) myApp;
-            Server myServer = myServerApp.getMyServer();
-            Globals.PositivDiskUpdateMessage updatePosDisk = new Globals.PositivDiskUpdateMessage(this.indexInList, this.POINT);
-            myServer.broadcast(updatePosDisk);
+            // server send update to the clients :
+            if(myApp instanceof ServerMain){
+                ServerMain myServerApp = (ServerMain) myApp;
+                Server myServer = myServerApp.getMyServer();
+                Globals.PositivDiskUpdateMessage updatePosDisk = new Globals.PositivDiskUpdateMessage(this.indexInList, this.POINT);
+                myServer.broadcast(updatePosDisk);
+                System.out.println("send PositivDiskUpdateMessage");
+            }
         }
-        
         // return the reward :
         return reward;        
     }
@@ -1103,6 +1127,13 @@ abstract class Player extends Disk {
     @Override
     void addToScore(int points) {
         this.POINT += points;
+        // broadcast the new score :
+        if(myApp instanceof ServerMain){
+            ServerMain myServerApp = (ServerMain) myApp;
+            Server myServer = myServerApp.getMyServer();
+            Globals.ScoreMessage updateScore = new Globals.ScoreMessage(this.POINT, this.id);
+            myServer.broadcast(updateScore);
+        }
     }
     
     public void setScore(int newScore){

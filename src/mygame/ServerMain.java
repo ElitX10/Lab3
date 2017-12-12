@@ -192,6 +192,12 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         }        
         return 10;
     }
+
+    private void resetPlayerScore() {
+        for (int i =0; i < PlayerStore.size(); i++){
+            PlayerStore.get(i).setScore(0);
+        }
+    }
     
     public class ServerListener implements MessageListener<HostedConnection>{
 
@@ -214,6 +220,8 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                         game.addServerPlayerToList(PlayerStore);
                         // set id for players :
                         ServerMain.this.setNewID();
+                        // reset score : 
+                        ServerMain.this.resetPlayerScore();
                         // assigne position for each player : 
                         ServerMain.this.setRandomPosition();
                         // enable all players :
@@ -246,7 +254,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
                     public Object call() throws Exception {
                         int index = getIndexOfPlayer(mySource.getId());
                         PlayerStore.get(index).newInput(input.getXTimer(), input.getYTimer());
-                        System.out.println("player : " + PlayerStore.get(index).id + " X : " + PlayerStore.get(index).getXPos() + " Y : " + PlayerStore.get(index).getYPos());
+//                        System.out.println("player : " + PlayerStore.get(index).id + " X : " + PlayerStore.get(index).getXPos() + " Y : " + PlayerStore.get(index).getYPos());
                         return true;
                     }
                 });

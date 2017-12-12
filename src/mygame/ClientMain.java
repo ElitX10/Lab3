@@ -82,7 +82,8 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                                     PlayerPosMessage.class,
                                     EndGameMessage.class,
                                     DiskPosMessage.class,
-                                    PositivDiskUpdateMessage.class);
+                                    PositivDiskUpdateMessage.class,
+                                    ScoreMessage.class);
         
         // unable camera mvt with mouse : 
         flyCam.setEnabled(false); 
@@ -264,6 +265,17 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                     public Object call() throws Exception {
                         PDisk diskToUpdate = (PDisk) ClientMain.this.game.getDiskStore().get(diskUpdateMess.getIndex());
                         diskToUpdate.updateDisk(diskUpdateMess.getPoint());
+                        return true;
+                    }
+                });
+            }else if(m instanceof ScoreMessage){
+                final ScoreMessage updateMess = (ScoreMessage) m;
+                Future result = ClientMain.this.enqueue(new Callable() {
+                    @Override
+                    public Object call() throws Exception {
+                        int id = updateMess.getId();
+                        int newScore = updateMess.getPoint();
+                        PlayerStore.get(id - 1).setScore(newScore);
                         return true;
                     }
                 });
