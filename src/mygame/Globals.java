@@ -531,6 +531,9 @@ abstract class Disk extends BaseAppState {
     
     // game node : 
     private final Node NODE_GAME;
+    
+    // constant for predicted values :    
+    private final float e = 0.5f;
         
     public Disk(String type, ColorRGBA color, float radius, float size, float X_pos, float Y_pos, SimpleApplication app, Node gameNode){
         myApp = app;
@@ -579,16 +582,34 @@ abstract class Disk extends BaseAppState {
     
     @Override
     public void update(float tpf) {
-        // update the position :
-        this.X_POS += X_SPEED * tpf;
-        this.Y_POS += Y_SPEED * tpf;   
-        
-        // move to the new position :
-        node_disk.setLocalTranslation(X_POS, Y_POS , Z_POS);
-        
-        //simulate friction :
-        this.X_SPEED -= this.X_SPEED * FRICTION * tpf;
-        this.Y_SPEED -= this.Y_SPEED * FRICTION * tpf;  
+        if (myApp instanceof ServerMain){
+            // update the position :
+            this.X_POS += this.X_SPEED * tpf;
+            this.Y_POS += this.Y_SPEED * tpf;   
+
+            // move to the new position :
+            node_disk.setLocalTranslation(X_POS, Y_POS , Z_POS);
+
+            //simulate friction :
+            this.X_SPEED -= this.X_SPEED * FRICTION * tpf;
+            this.Y_SPEED -= this.Y_SPEED * FRICTION * tpf; 
+        }else if (myApp instanceof ClientMain){
+            float Predicted_X_POS = this.X_POS + this.X_SPEED * tpf;
+            float Predicted_Y_POS = this.Y_POS + this.Y_SPEED * tpf;
+            float Predicted_X_SPEED = this.X_SPEED - this.X_SPEED * FRICTION * tpf;
+            float Predicted_Y_SPEED = this.Y_SPEED - this.Y_SPEED * FRICTION * tpf;
+            
+            
+            this.X_SPEED = this.X_SPEED + e * (Predicted_X_SPEED - this.X_SPEED);
+            this.Y_SPEED = this.Y_SPEED + e * (Predicted_Y_SPEED - this.Y_SPEED);
+//            this.X_POS = this.X_POS + e * (Predicted_X_POS - this.X_POS);
+//            this.Y_POS = this.Y_POS + e * (Predicted_Y_POS - this.Y_POS);
+            this.X_POS += this.X_SPEED * tpf;
+            this.Y_POS += this.Y_SPEED * tpf;   
+            // move to the new position :
+            node_disk.setLocalTranslation(X_POS, Y_POS , Z_POS);
+        }
+         
         
         // check if there is a collision with the frame :    
         frameCollision();
@@ -714,20 +735,38 @@ abstract class Disk extends BaseAppState {
         }       
     }
     
-    public void setXPos(float newX){
-        this.X_POS = newX;
+    public void setXPos(float newX){        
+//        if (myApp instanceof ServerMain){
+            this.X_POS = newX;
+//        }else if (myApp instanceof ClientMain){
+//            this.X_POS = this.X_POS + e * (newX - this.X_POS);
+//        }
     }
     
-    public void setYPos(float newY){
-        this.Y_POS = newY;
+    public void setYPos(float newY){        
+//        if (myApp instanceof ServerMain){
+            this.Y_POS = newY;
+//        }else if (myApp instanceof ClientMain){
+//            this.Y_POS = this.Y_POS + e * (newY - this.Y_POS);
+//        }
     }
     
     public void setXSpeed(float newXSpeed){
-        this.X_SPEED = newXSpeed;
+//        if (myApp instanceof ServerMain){
+            this.X_SPEED = newXSpeed;
+//        }else if (myApp instanceof ClientMain){
+//            this.X_SPEED = this.X_SPEED + e * (newXSpeed - this.X_SPEED);
+//        }
+        
     }
 
     public void setYSpeed(float newYSpeed){
-        this.Y_SPEED = newYSpeed;
+//        if (myApp instanceof ServerMain){
+            this.Y_SPEED = newYSpeed;
+//        }else if (myApp instanceof ClientMain){
+//            this.Y_SPEED = this.Y_SPEED + e * (newYSpeed - this.Y_SPEED);
+//        }
+        
     }
 
     public float getXPos(){

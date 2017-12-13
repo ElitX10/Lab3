@@ -184,10 +184,10 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     }
     
     private void removeInGameLeaver(){
-        System.out.println("size : " + indexOfLeaver.size());
+//        System.out.println("size : " + indexOfLeaver.size());
         for (int i = indexOfLeaver.size() - 1; i >= 0; i--){
             int j = indexOfLeaver.get(i);
-            System.out.println("j : " + j);
+//            System.out.println("j : " + j);
             PlayerStore.remove(j);
         }
         indexOfLeaver.clear();
