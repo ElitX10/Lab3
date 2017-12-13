@@ -345,7 +345,7 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
     }
     
     private void DiskPositions(){
-        int TotalDisksNum = game.getDiskStore().size() + PlayerStore.size();
+        int TotalDisksNum = game.getDiskStore().size();
         float[] X_Pos = new float[TotalDisksNum];
         float[] Y_Pos = new float[TotalDisksNum];
         float[] X_Speed = new float[TotalDisksNum];
@@ -354,17 +354,10 @@ public class ServerMain extends SimpleApplication implements ConnectionListener{
         int playerIndex = 0;
         
         for (int i = 0; i < TotalDisksNum; i++){
-            if(i < game.getDiskStore().size()){
                 X_Pos[i] = game.getDiskStore().get(i).getXPos();
                 Y_Pos[i] = game.getDiskStore().get(i).getYPos();
                 X_Speed[i] = game.getDiskStore().get(i).getXSpeed();
                 Y_Speed[i] = game.getDiskStore().get(i).getYSpeed();
-            } else {
-                X_Pos[i] = PlayerStore.get(playerIndex).getXPos();
-                Y_Pos[i] = PlayerStore.get(playerIndex).getYPos();
-                X_Speed[i] = PlayerStore.get(playerIndex).getXSpeed();
-                Y_Speed[i] = PlayerStore.get(playerIndex).getYSpeed();
-            }
         }
         
         X_Disks = X_Pos;

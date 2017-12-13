@@ -33,7 +33,7 @@ import java.util.ArrayList;
 public class Globals {
     // variable for setting the server and the clients :
     public static final String NAME = "Lab3";
-    public static final String DEFAULT_SERVER = "localhost";
+    public static final String DEFAULT_SERVER = "130.240.153.5"; //"130.240.157.44";
     public static final int VERSION = 1;
     public static final int DEFAULT_PORT = 6143;
     
@@ -736,19 +736,19 @@ abstract class Disk extends BaseAppState {
     }
     
     public void setXPos(float newX){        
-//        if (myApp instanceof ServerMain){
+        if (myApp instanceof ServerMain){
             this.X_POS = newX;
-//        }else if (myApp instanceof ClientMain){
-//            this.X_POS = this.X_POS + e * (newX - this.X_POS);
-//        }
+        }else if (myApp instanceof ClientMain){
+            node_disk.setLocalTranslation(newX, Y_POS , Z_POS);
+        }
     }
     
     public void setYPos(float newY){        
-//        if (myApp instanceof ServerMain){
+        if (myApp instanceof ServerMain){
             this.Y_POS = newY;
-//        }else if (myApp instanceof ClientMain){
-//            this.Y_POS = this.Y_POS + e * (newY - this.Y_POS);
-//        }
+        }else if (myApp instanceof ClientMain){
+            node_disk.setLocalTranslation(X_POS, newY , Z_POS);
+        }
     }
     
     public void setXSpeed(float newXSpeed){

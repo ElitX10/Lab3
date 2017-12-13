@@ -253,13 +253,15 @@ public class ClientMain extends SimpleApplication implements ClientStateListener
                         float[] Y_Pos = DiskPos.getY();
                         float[] X_Speed = DiskPos.getX_SPEED();
                         float[] Y_Speed = DiskPos.getY_SPEED();
-
-                        for (int i = 0; i < X_Pos.length; i ++){                    
-                            if (i < game.getDiskStore().size()){                                
-                                ClientMain.this.game.getDiskStore().get(i).setXPos(X_Pos[i]);
-                                ClientMain.this.game.getDiskStore().get(i).setYPos(Y_Pos[i]);
-                                ClientMain.this.game.getDiskStore().get(i).setXSpeed(X_Speed[i]);                                
-                                ClientMain.this.game.getDiskStore().get(i).setYSpeed(Y_Speed[i]);
+                        if(game.getDiskStore().size() == X_Pos.length){
+                            for (int i = 0; i < X_Pos.length; i ++){                    
+                                //if (i < game.getDiskStore().size())
+                                {                                
+                                    ClientMain.this.game.getDiskStore().get(i).setXPos(X_Pos[i]);
+                                    ClientMain.this.game.getDiskStore().get(i).setYPos(Y_Pos[i]);
+                                    ClientMain.this.game.getDiskStore().get(i).setXSpeed(X_Speed[i]);                                
+                                    ClientMain.this.game.getDiskStore().get(i).setYSpeed(Y_Speed[i]);
+                                }
                             }
                         }
                         return true;
